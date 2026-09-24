@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Cow Money</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <section id="login-screen" class="screen login-screen">
+      <div class="login-card">
+        <div class="logo">🐄</div>
+        <h1>The Cow Money</h1>
+        <p class="subtitle">Gestión del banquito</p>
+        <form id="login-form">
+          <label>Correo electrónico</label>
+          <input id="email" type="email" required autocomplete="email" placeholder="tu correo" />
+          <label>Contraseña</label>
+          <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••" />
+          <button type="submit" class="primary">Ingresar</button>
+          <p id="login-message" class="message"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="main-screen" class="screen hidden">
+      <header class="topbar">
+        <div>
+          <strong>🐄 The Cow Money</strong>
+          <span id="user-name"></span>
+        </div>
+        <button id="logout" class="secondary">Salir</button>
+      </header>
+
+      <main class="container">
+        <h2>Panel principal</h2>
+        <p class="welcome">Bienvenido. Desde aquí administraremos socios, aportes, préstamos y caja.</p>
+
+        <div class="cards">
+          <article class="card"><span>👥</span><h3>Socios</h3><p>17 socios activos</p></article>
+          <article class="card"><span>💵</span><h3>Aportes</h3><p>Control mensual y multas</p></article>
+          <article class="card"><span>🏦</span><h3>Préstamos</h3><p>Solicitudes, cuotas y renovaciones</p></article>
+          <article class="card"><span>📒</span><h3>Caja</h3><p>Ingresos y movimientos</p></article>
+        </div>
+
+        <section class="panel">
+          <h3>Estado del sistema</h3>
+          <div id="connection-status" class="status">Comprobando conexión con Supabase...</div>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
