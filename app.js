@@ -47,13 +47,6 @@ let supabaseClient = null;
 
 
 // ============================================================
-// GUARDAR SOCIOS EN MEMORIA
-// ============================================================
-
-let sociosData = [];
-
-
-// ============================================================
 // INICIALIZAR SUPABASE
 // ============================================================
 
@@ -108,6 +101,14 @@ function showMain(user) {
 function showLogin() {
 
     mainScreen.classList.add("hidden");
+
+    if (moduloScreen) {
+        moduloScreen.classList.add("hidden");
+    }
+
+    if (sociosInicio) {
+        sociosInicio.classList.remove("hidden");
+    }
 
     loginScreen.classList.remove("hidden");
 
@@ -197,15 +198,13 @@ logout.addEventListener(
 
 
 // ============================================================
-// CARGAR SOCIOS
+// CARGAR SOCIOS PARA EL PANEL PRINCIPAL
 // ============================================================
 
 async function cargarSocios() {
 
     if (!supabaseClient) {
-
         return;
-
     }
 
 
@@ -235,28 +234,29 @@ async function cargarSocios() {
                 error
             );
 
-            connectionStatus.textContent =
-                "Error al consultar los socios: " +
-                error.message;
+            if (connectionStatus) {
+
+                connectionStatus.textContent =
+                    "Error al consultar los socios: " +
+                    error.message;
+
+            }
 
             return;
 
         }
 
 
-        // ----------------------------------------------------
-        // GUARDAR SOCIOS
-        // ----------------------------------------------------
-
-        sociosData = data || [];
+        const socios =
+            data || [];
 
 
-        // ----------------------------------------------------
+        // ====================================================
         // CANTIDAD DE SOCIOS ACTIVOS
-        // ----------------------------------------------------
+        // ====================================================
 
         const sociosActivos =
-            sociosData.filter(
+            socios.filter(
                 function (socio) {
 
                     return socio.estado === "ACTIVO";
@@ -273,26 +273,88 @@ async function cargarSocios() {
         }
 
 
-        // ----------------------------------------------------
+        // ====================================================
         // ESTADO DE CONEXIÓN
-        // ----------------------------------------------------
+        // ====================================================
 
         if (connectionStatus) {
 
             connectionStatus.textContent =
                 "Conexión correcta. Socios encontrados: " +
-                sociosData.length;
+                socios.length;
 
         }
 
 
-        // ----------------------------------------------------
-        // MOSTRAR SOCIOS EN EL PANEL PRINCIPAL
-        // ----------------------------------------------------
+        // ====================================================
+        // LISTA DE SOCIOS EN EL PANEL PRINCIPAL
+        // ====================================================
 
-        mostrarListaSocios(
-            sociosLista,
-            sociosData
+        if (!sociosLista) {
+            return;
+        }
+
+
+        sociosLista.innerHTML = "";
+
+
+        if (socios.length === 0) {
+
+            sociosLista.innerHTML =
+                "<p>No hay socios registrados.</p>";
+
+            return;
+
+        }
+
+
+        socios.forEach(
+            function (socio) {
+
+                const fila =
+                    document.createElement("div");
+
+                fila.className =
+                    "socio-row";
+
+
+                const nombre =
+                    document.createElement("strong");
+
+                nombre.textContent =
+                    socio.nombre || "Sin nombre";
+
+
+                const email =
+                    document.createElement("span");
+
+                email.textContent =
+                    socio.email || "Sin correo";
+
+
+                const rol =
+                    document.createElement("span");
+
+                rol.textContent =
+                    socio.rol || "SOCIO";
+
+
+                const estado =
+                    document.createElement("span");
+
+                estado.textContent =
+                    socio.estado || "ACTIVO";
+
+
+                fila.appendChild(nombre);
+                fila.appendChild(email);
+                fila.appendChild(rol);
+                fila.appendChild(estado);
+
+
+                sociosLista.appendChild(fila);
+
+            }
         );
 
 
@@ -316,82 +378,228 @@ async function cargarSocios() {
 
 
 // ============================================================
-// FUNCIÓN PARA MOSTRAR LISTA DE SOCIOS
+// CARGAR SOCIOS DENTRO DEL MÓDULO SOCIOS
 // ============================================================
 
-function mostrarListaSocios(contenedor, socios) {
+async function cargarSociosModulo() {
 
-    if (!contenedor) {
-
-        return;
-
-    }
-
-
-    contenedor.innerHTML = "";
+    const lista =
+        document.getElementById(
+            "lista-socios-modulo"
+        );
 
 
-    if (!socios || socios.length === 0) {
+    if (!lista) {
 
-        contenedor.innerHTML =
-            "<p>No hay socios registrados.</p>";
+        console.error(
+            "No existe lista-socios-modulo"
+        );
 
         return;
 
     }
 
 
-    socios.forEach(
-        function (socio) {
+    if (!supabaseClient) {
 
-            const fila =
-                document.createElement("div");
+        lista.innerHTML = `
+            <div class="modulo-info">
+                ❌ No hay conexión con Supabase.
+            </div>
+        `;
 
-            fila.className =
-                "socio-row";
+        return;
 
-
-            const nombre =
-                document.createElement("strong");
-
-            nombre.textContent =
-                socio.nombre || "Sin nombre";
+    }
 
 
-            const email =
-                document.createElement("span");
-
-            email.textContent =
-                socio.email || "Sin correo";
-
-
-            const rol =
-                document.createElement("span");
-
-            rol.textContent =
-                socio.rol || "SOCIO";
+    lista.innerHTML = `
+        <div class="modulo-info">
+            Cargando socios desde Supabase...
+        </div>
+    `;
 
 
-            const estado =
-                document.createElement("span");
+    try {
 
-            estado.textContent =
-                socio.estado || "ACTIVO";
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("socios")
+                .select(
+                    "id,nombre,email,rol,estado"
+                )
+                .order(
+                    "nombre",
+                    {
+                        ascending: true
+                    }
+                );
 
 
-            fila.appendChild(nombre);
+        if (error) {
 
-            fila.appendChild(email);
+            console.error(
+                "Error cargando socios del módulo:",
+                error
+            );
 
-            fila.appendChild(rol);
 
-            fila.appendChild(estado);
+            lista.innerHTML = `
+                <div class="modulo-info">
+                    ❌ Error al cargar los socios:
+                    ${error.message}
+                </div>
+            `;
 
-
-            contenedor.appendChild(fila);
+            return;
 
         }
-    );
+
+
+        const socios =
+            data || [];
+
+
+        if (socios.length === 0) {
+
+            lista.innerHTML = `
+                <div class="modulo-info">
+                    No existen socios registrados.
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+        // ====================================================
+        // ENCABEZADO
+        // ====================================================
+
+        const contenedor =
+            document.createElement("div");
+
+        contenedor.className =
+            "tabla-contenedor";
+
+
+        const titulo =
+            document.createElement("p");
+
+        titulo.innerHTML =
+            `<strong>${socios.length}</strong> socios registrados`;
+
+        contenedor.appendChild(titulo);
+
+
+        // ====================================================
+        // TABLA
+        // ====================================================
+
+        const tabla =
+            document.createElement("table");
+
+        tabla.className =
+            "tabla-socios";
+
+
+        const thead =
+            document.createElement("thead");
+
+        thead.innerHTML = `
+            <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Estado</th>
+            </tr>
+        `;
+
+
+        const tbody =
+            document.createElement("tbody");
+
+
+        // ====================================================
+        // AGREGAR SOCIOS
+        // ====================================================
+
+        socios.forEach(
+            function (socio) {
+
+                const fila =
+                    document.createElement("tr");
+
+
+                const nombre =
+                    document.createElement("td");
+
+                nombre.textContent =
+                    socio.nombre || "Sin nombre";
+
+
+                const email =
+                    document.createElement("td");
+
+                email.textContent =
+                    socio.email || "Sin correo";
+
+
+                const rol =
+                    document.createElement("td");
+
+                rol.textContent =
+                    socio.rol || "SOCIO";
+
+
+                const estado =
+                    document.createElement("td");
+
+                estado.textContent =
+                    socio.estado || "ACTIVO";
+
+
+                fila.appendChild(nombre);
+                fila.appendChild(email);
+                fila.appendChild(rol);
+                fila.appendChild(estado);
+
+
+                tbody.appendChild(fila);
+
+            }
+        );
+
+
+        tabla.appendChild(thead);
+        tabla.appendChild(tbody);
+
+        contenedor.appendChild(tabla);
+
+        lista.innerHTML = "";
+
+        lista.appendChild(contenedor);
+
+
+    } catch (error) {
+
+        console.error(
+            "Error inesperado:",
+            error
+        );
+
+
+        lista.innerHTML = `
+            <div class="modulo-info">
+                ❌ Error inesperado al cargar los socios.
+            </div>
+        `;
+
+    }
 
 }
 
@@ -403,9 +611,7 @@ function mostrarListaSocios(contenedor, socios) {
 async function cargarDatosIniciales() {
 
     if (!supabaseClient) {
-
         return;
-
     }
 
     await cargarSocios();
@@ -417,7 +623,7 @@ async function cargarDatosIniciales() {
 // ABRIR MÓDULO
 // ============================================================
 
-function abrirModulo(modulo) {
+async function abrirModulo(modulo) {
 
     console.log(
         "Abriendo módulo:",
@@ -425,24 +631,28 @@ function abrirModulo(modulo) {
     );
 
 
-    // --------------------------------------------------------
-    // OCULTAR PANEL PRINCIPAL
-    // --------------------------------------------------------
+    // ========================================================
+    // OCULTAR PANEL INICIAL
+    // ========================================================
 
     if (sociosInicio) {
 
-        sociosInicio.classList.add("hidden");
+        sociosInicio.classList.add(
+            "hidden"
+        );
 
     }
 
 
-    // --------------------------------------------------------
+    // ========================================================
     // MOSTRAR PANTALLA DEL MÓDULO
-    // --------------------------------------------------------
+    // ========================================================
 
     if (moduloScreen) {
 
-        moduloScreen.classList.remove("hidden");
+        moduloScreen.classList.remove(
+            "hidden"
+        );
 
     }
 
@@ -468,24 +678,16 @@ function abrirModulo(modulo) {
                     Socios registrados
                 </h3>
 
-                <p>
-                    Socios activos:
-                    <strong>
-                        ${sociosData.filter(
-                            socio => socio.estado === "ACTIVO"
-                        ).length}
-                    </strong>
-                </p>
-
-                <div class="socios-modulo-lista">
-
-                    ${generarHTMLSocios(sociosData)}
-
+                <div id="lista-socios-modulo">
+                    Cargando socios...
                 </div>
 
             </div>
 
         `;
+
+
+        await cargarSociosModulo();
 
         return;
 
@@ -597,87 +799,6 @@ function abrirModulo(modulo) {
 
 
 // ============================================================
-// GENERAR HTML DE SOCIOS PARA EL MÓDULO
-// ============================================================
-
-function generarHTMLSocios(socios) {
-
-    if (!socios || socios.length === 0) {
-
-        return `
-            <p>
-                No hay socios registrados.
-            </p>
-        `;
-
-    }
-
-
-    let html = "";
-
-
-    socios.forEach(
-        function (socio) {
-
-            html += `
-
-                <div class="socio-row">
-
-                    <strong>
-                        ${escapeHTML(
-                            socio.nombre || "Sin nombre"
-                        )}
-                    </strong>
-
-                    <span>
-                        ${escapeHTML(
-                            socio.email || "Sin correo"
-                        )}
-                    </span>
-
-                    <span>
-                        ${escapeHTML(
-                            socio.rol || "SOCIO"
-                        )}
-                    </span>
-
-                    <span>
-                        ${escapeHTML(
-                            socio.estado || "ACTIVO"
-                        )}
-                    </span>
-
-                </div>
-
-            `;
-
-        }
-    );
-
-
-    return html;
-
-}
-
-
-// ============================================================
-// PROTEGER TEXTO HTML
-// ============================================================
-
-function escapeHTML(texto) {
-
-    const div =
-        document.createElement("div");
-
-    div.textContent =
-        texto;
-
-    return div.innerHTML;
-
-}
-
-
-// ============================================================
 // CONFIGURAR BOTONES DEL MENÚ
 // ============================================================
 
@@ -714,7 +835,9 @@ function configurarMenu() {
                     );
 
 
-                    abrirModulo(modulo);
+                    abrirModulo(
+                        modulo
+                    );
 
                 }
             );
@@ -726,7 +849,7 @@ function configurarMenu() {
 
 
 // ============================================================
-// BOTÓN VOLVER
+// BOTÓN VOLVER AL PANEL
 // ============================================================
 
 if (volverPanel) {
@@ -765,14 +888,14 @@ if (volverPanel) {
 (async function () {
 
     // --------------------------------------------------------
-    // CONFIGURAR MENÚ
+    // CONFIGURAR BOTONES
     // --------------------------------------------------------
 
     configurarMenu();
 
 
     // --------------------------------------------------------
-    // VERIFICAR SUPABASE
+    // SI SUPABASE NO ESTÁ CONFIGURADO
     // --------------------------------------------------------
 
     if (!supabaseClient) {
@@ -783,7 +906,7 @@ if (volverPanel) {
 
 
     // --------------------------------------------------------
-    // COMPROBAR SESIÓN
+    // COMPROBAR SESIÓN ACTUAL
     // --------------------------------------------------------
 
     const {
