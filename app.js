@@ -38,15 +38,19 @@ const moduloContenido =
 const volverPanel =
     document.getElementById("volver-panel");
 
-const menuCards =
-    document.querySelectorAll(".menu-card");
-
 
 // ============================================================
 // SUPABASE
 // ============================================================
 
 let supabaseClient = null;
+
+
+// ============================================================
+// GUARDAR SOCIOS EN MEMORIA
+// ============================================================
+
+let sociosData = [];
 
 
 // ============================================================
@@ -240,16 +244,19 @@ async function cargarSocios() {
         }
 
 
-        const socios =
-            data || [];
+        // ----------------------------------------------------
+        // GUARDAR SOCIOS
+        // ----------------------------------------------------
+
+        sociosData = data || [];
 
 
         // ----------------------------------------------------
-        // CANTIDAD DE SOCIOS
+        // CANTIDAD DE SOCIOS ACTIVOS
         // ----------------------------------------------------
 
         const sociosActivos =
-            socios.filter(
+            sociosData.filter(
                 function (socio) {
 
                     return socio.estado === "ACTIVO";
@@ -258,86 +265,34 @@ async function cargarSocios() {
             );
 
 
-        cantidadSocios.textContent =
-            sociosActivos.length;
+        if (cantidadSocios) {
+
+            cantidadSocios.textContent =
+                sociosActivos.length;
+
+        }
 
 
         // ----------------------------------------------------
         // ESTADO DE CONEXIÓN
         // ----------------------------------------------------
 
-        connectionStatus.textContent =
-            "Conexión correcta. Socios encontrados: " +
-            socios.length;
+        if (connectionStatus) {
 
-
-        // ----------------------------------------------------
-        // LISTA DE SOCIOS
-        // ----------------------------------------------------
-
-        sociosLista.innerHTML = "";
-
-
-        if (socios.length === 0) {
-
-            sociosLista.innerHTML =
-                "<p>No hay socios registrados.</p>";
-
-            return;
+            connectionStatus.textContent =
+                "Conexión correcta. Socios encontrados: " +
+                sociosData.length;
 
         }
 
 
-        socios.forEach(
-            function (socio) {
+        // ----------------------------------------------------
+        // MOSTRAR SOCIOS EN EL PANEL PRINCIPAL
+        // ----------------------------------------------------
 
-                const fila =
-                    document.createElement("div");
-
-                fila.className =
-                    "socio-row";
-
-
-                const nombre =
-                    document.createElement("strong");
-
-                nombre.textContent =
-                    socio.nombre || "Sin nombre";
-
-
-                const email =
-                    document.createElement("span");
-
-                email.textContent =
-                    socio.email || "Sin correo";
-
-
-                const rol =
-                    document.createElement("span");
-
-                rol.textContent =
-                    socio.rol || "SOCIO";
-
-
-                const estado =
-                    document.createElement("span");
-
-                estado.textContent =
-                    socio.estado || "ACTIVO";
-
-
-                fila.appendChild(nombre);
-
-                fila.appendChild(email);
-
-                fila.appendChild(rol);
-
-                fila.appendChild(estado);
-
-
-                sociosLista.appendChild(fila);
-
-            }
+        mostrarListaSocios(
+            sociosLista,
+            sociosData
         );
 
 
@@ -348,10 +303,95 @@ async function cargarSocios() {
             error
         );
 
-        connectionStatus.textContent =
-            "Error inesperado al cargar socios.";
+        if (connectionStatus) {
+
+            connectionStatus.textContent =
+                "Error inesperado al cargar socios.";
+
+        }
 
     }
+
+}
+
+
+// ============================================================
+// FUNCIÓN PARA MOSTRAR LISTA DE SOCIOS
+// ============================================================
+
+function mostrarListaSocios(contenedor, socios) {
+
+    if (!contenedor) {
+
+        return;
+
+    }
+
+
+    contenedor.innerHTML = "";
+
+
+    if (!socios || socios.length === 0) {
+
+        contenedor.innerHTML =
+            "<p>No hay socios registrados.</p>";
+
+        return;
+
+    }
+
+
+    socios.forEach(
+        function (socio) {
+
+            const fila =
+                document.createElement("div");
+
+            fila.className =
+                "socio-row";
+
+
+            const nombre =
+                document.createElement("strong");
+
+            nombre.textContent =
+                socio.nombre || "Sin nombre";
+
+
+            const email =
+                document.createElement("span");
+
+            email.textContent =
+                socio.email || "Sin correo";
+
+
+            const rol =
+                document.createElement("span");
+
+            rol.textContent =
+                socio.rol || "SOCIO";
+
+
+            const estado =
+                document.createElement("span");
+
+            estado.textContent =
+                socio.estado || "ACTIVO";
+
+
+            fila.appendChild(nombre);
+
+            fila.appendChild(email);
+
+            fila.appendChild(rol);
+
+            fila.appendChild(estado);
+
+
+            contenedor.appendChild(fila);
+
+        }
+    );
 
 }
 
@@ -385,7 +425,9 @@ function abrirModulo(modulo) {
     );
 
 
-    // Ocultar lista inicial de socios
+    // --------------------------------------------------------
+    // OCULTAR PANEL PRINCIPAL
+    // --------------------------------------------------------
 
     if (sociosInicio) {
 
@@ -394,7 +436,9 @@ function abrirModulo(modulo) {
     }
 
 
-    // Mostrar pantalla del módulo
+    // --------------------------------------------------------
+    // MOSTRAR PANTALLA DEL MÓDULO
+    // --------------------------------------------------------
 
     if (moduloScreen) {
 
@@ -403,9 +447,9 @@ function abrirModulo(modulo) {
     }
 
 
-    // --------------------------------------------------------
-    // SOCIOS
-    // --------------------------------------------------------
+    // ========================================================
+    // MÓDULO SOCIOS
+    // ========================================================
 
     if (modulo === "socios") {
 
@@ -425,15 +469,19 @@ function abrirModulo(modulo) {
                 </h3>
 
                 <p>
-                    Actualmente existen
-                    ${cantidadSocios.textContent}
-                    socios activos.
+                    Socios activos:
+                    <strong>
+                        ${sociosData.filter(
+                            socio => socio.estado === "ACTIVO"
+                        ).length}
+                    </strong>
                 </p>
 
-                <p>
-                    La información se está obteniendo
-                    directamente desde Supabase.
-                </p>
+                <div class="socios-modulo-lista">
+
+                    ${generarHTMLSocios(sociosData)}
+
+                </div>
 
             </div>
 
@@ -444,9 +492,9 @@ function abrirModulo(modulo) {
     }
 
 
-    // --------------------------------------------------------
-    // APORTES
-    // --------------------------------------------------------
+    // ========================================================
+    // MÓDULO APORTES
+    // ========================================================
 
     if (modulo === "aportes") {
 
@@ -478,9 +526,9 @@ function abrirModulo(modulo) {
     }
 
 
-    // --------------------------------------------------------
-    // PRÉSTAMOS
-    // --------------------------------------------------------
+    // ========================================================
+    // MÓDULO PRÉSTAMOS
+    // ========================================================
 
     if (modulo === "prestamos") {
 
@@ -512,9 +560,9 @@ function abrirModulo(modulo) {
     }
 
 
-    // --------------------------------------------------------
-    // CAJA
-    // --------------------------------------------------------
+    // ========================================================
+    // MÓDULO CAJA
+    // ========================================================
 
     if (modulo === "caja") {
 
@@ -549,6 +597,87 @@ function abrirModulo(modulo) {
 
 
 // ============================================================
+// GENERAR HTML DE SOCIOS PARA EL MÓDULO
+// ============================================================
+
+function generarHTMLSocios(socios) {
+
+    if (!socios || socios.length === 0) {
+
+        return `
+            <p>
+                No hay socios registrados.
+            </p>
+        `;
+
+    }
+
+
+    let html = "";
+
+
+    socios.forEach(
+        function (socio) {
+
+            html += `
+
+                <div class="socio-row">
+
+                    <strong>
+                        ${escapeHTML(
+                            socio.nombre || "Sin nombre"
+                        )}
+                    </strong>
+
+                    <span>
+                        ${escapeHTML(
+                            socio.email || "Sin correo"
+                        )}
+                    </span>
+
+                    <span>
+                        ${escapeHTML(
+                            socio.rol || "SOCIO"
+                        )}
+                    </span>
+
+                    <span>
+                        ${escapeHTML(
+                            socio.estado || "ACTIVO"
+                        )}
+                    </span>
+
+                </div>
+
+            `;
+
+        }
+    );
+
+
+    return html;
+
+}
+
+
+// ============================================================
+// PROTEGER TEXTO HTML
+// ============================================================
+
+function escapeHTML(texto) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        texto;
+
+    return div.innerHTML;
+
+}
+
+
+// ============================================================
 // CONFIGURAR BOTONES DEL MENÚ
 // ============================================================
 
@@ -569,7 +698,8 @@ function configurarMenu() {
     botones.forEach(
         function (boton) {
 
-            boton.onclick =
+            boton.addEventListener(
+                "click",
                 function () {
 
                     const modulo =
@@ -586,7 +716,8 @@ function configurarMenu() {
 
                     abrirModulo(modulo);
 
-                };
+                }
+            );
 
         }
     );
@@ -600,18 +731,29 @@ function configurarMenu() {
 
 if (volverPanel) {
 
-    volverPanel.onclick =
+    volverPanel.addEventListener(
+        "click",
         function () {
 
-            moduloScreen.classList.add(
-                "hidden"
-            );
+            if (moduloScreen) {
 
-            sociosInicio.classList.remove(
-                "hidden"
-            );
+                moduloScreen.classList.add(
+                    "hidden"
+                );
 
-        };
+            }
+
+
+            if (sociosInicio) {
+
+                sociosInicio.classList.remove(
+                    "hidden"
+                );
+
+            }
+
+        }
+    );
 
 }
 
@@ -622,14 +764,16 @@ if (volverPanel) {
 
 (async function () {
 
-    // Configuramos los botones
-    // después de cargar todo el HTML.
+    // --------------------------------------------------------
+    // CONFIGURAR MENÚ
+    // --------------------------------------------------------
 
     configurarMenu();
 
 
-    // Si no existe Supabase,
-    // no continuamos.
+    // --------------------------------------------------------
+    // VERIFICAR SUPABASE
+    // --------------------------------------------------------
 
     if (!supabaseClient) {
 
@@ -638,7 +782,9 @@ if (volverPanel) {
     }
 
 
-    // Comprobar sesión actual.
+    // --------------------------------------------------------
+    // COMPROBAR SESIÓN
+    // --------------------------------------------------------
 
     const {
         data
