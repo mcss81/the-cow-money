@@ -1,59 +1,320 @@
 <!doctype html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>The Cow Money</title>
+
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
+
   <div id="app">
+
+    <!-- =====================================================
+         PANTALLA DE LOGIN
+         ===================================================== -->
+
     <section id="login-screen" class="screen login-screen">
+
       <div class="login-card">
+
         <div class="logo">🐄</div>
+
         <h1>The Cow Money</h1>
-        <p class="subtitle">Gestión del banquito</p>
+
+        <p class="subtitle">
+          Gestión del banquito
+        </p>
+
         <form id="login-form">
-          <label>Correo electrónico</label>
-          <input id="email" type="email" required autocomplete="email" placeholder="tu correo" />
-          <label>Contraseña</label>
-          <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••" />
-          <button type="submit" class="primary">Ingresar</button>
-          <p id="login-message" class="message"></p>
+
+          <label for="email">
+            Correo electrónico
+          </label>
+
+          <input
+            id="email"
+            type="email"
+            required
+            autocomplete="email"
+            placeholder="tu correo"
+          />
+
+          <label for="password">
+            Contraseña
+          </label>
+
+          <input
+            id="password"
+            type="password"
+            required
+            autocomplete="current-password"
+            placeholder="••••••••"
+          />
+
+          <button
+            type="submit"
+            class="primary"
+          >
+            Ingresar
+          </button>
+
+          <p
+            id="login-message"
+            class="message"
+          ></p>
+
         </form>
+
       </div>
+
     </section>
 
-    <section id="main-screen" class="screen hidden">
+
+    <!-- =====================================================
+         PANTALLA PRINCIPAL
+         ===================================================== -->
+
+    <section
+      id="main-screen"
+      class="screen hidden"
+    >
+
+      <!-- BARRA SUPERIOR -->
+
       <header class="topbar">
+
         <div>
-          <strong>🐄 The Cow Money</strong>
+
+          <strong>
+            🐄 The Cow Money
+          </strong>
+
           <span id="user-name"></span>
+
         </div>
-        <button id="logout" class="secondary">Salir</button>
+
+        <button
+          id="logout"
+          class="secondary"
+        >
+          Salir
+        </button>
+
       </header>
 
+
+      <!-- CONTENIDO PRINCIPAL -->
+
       <main class="container">
-        <h2>Panel principal</h2>
-        <p class="welcome">Bienvenido. Desde aquí administraremos socios, aportes, préstamos y caja.</p>
+
+        <h2>
+          Panel principal
+        </h2>
+
+        <p class="welcome">
+          Bienvenido. Desde aquí administraremos socios,
+          aportes, préstamos y caja.
+        </p>
+
+
+        <!-- =================================================
+             MENÚ PRINCIPAL
+             ================================================= -->
 
         <div class="cards">
-          <article class="card"><span>👥</span><h3>Socios</h3><p>17 socios activos</p></article>
-          <article class="card"><span>💵</span><h3>Aportes</h3><p>Control mensual y multas</p></article>
-          <article class="card"><span>🏦</span><h3>Préstamos</h3><p>Solicitudes, cuotas y renovaciones</p></article>
-          <article class="card"><span>📒</span><h3>Caja</h3><p>Ingresos y movimientos</p></article>
+
+          <!-- SOCIOS -->
+
+          <button
+            class="card menu-card"
+            data-modulo="socios"
+            type="button"
+          >
+
+            <span>👥</span>
+
+            <h3>
+              Socios
+            </h3>
+
+            <p>
+              <span id="cantidad-socios">
+                Cargando...
+              </span>
+              socios activos
+            </p>
+
+          </button>
+
+
+          <!-- APORTES -->
+
+          <button
+            class="card menu-card"
+            data-modulo="aportes"
+            type="button"
+          >
+
+            <span>💵</span>
+
+            <h3>
+              Aportes
+            </h3>
+
+            <p>
+              Control mensual y multas
+            </p>
+
+          </button>
+
+
+          <!-- PRÉSTAMOS -->
+
+          <button
+            class="card menu-card"
+            data-modulo="prestamos"
+            type="button"
+          >
+
+            <span>🏦</span>
+
+            <h3>
+              Préstamos
+            </h3>
+
+            <p>
+              Solicitudes, cuotas y renovaciones
+            </p>
+
+          </button>
+
+
+          <!-- CAJA -->
+
+          <button
+            class="card menu-card"
+            data-modulo="caja"
+            type="button"
+          >
+
+            <span>📒</span>
+
+            <h3>
+              Caja
+            </h3>
+
+            <p>
+              Ingresos y movimientos
+            </p>
+
+          </button>
+
         </div>
 
+
+        <!-- =================================================
+             ESTADO DE CONEXIÓN
+             ================================================= -->
+
         <section class="panel">
-          <h3>Estado del sistema</h3>
-          <div id="connection-status" class="status">Comprobando conexión con Supabase...</div>
+
+          <h3>
+            Estado del sistema
+          </h3>
+
+          <div
+            id="connection-status"
+            class="status"
+          >
+            Comprobando conexión con Supabase...
+          </div>
+
         </section>
+
+
+        <!-- =================================================
+             LISTA DE SOCIOS
+             ================================================= -->
+
+        <section
+          id="socios-inicio"
+          class="panel"
+        >
+
+          <h3>
+            Socios registrados
+          </h3>
+
+          <div id="socios-lista">
+
+            Cargando socios...
+
+          </div>
+
+        </section>
+
+
+        <!-- =================================================
+             PANTALLA DE MÓDULOS
+             ================================================= -->
+
+        <section
+          id="modulo-screen"
+          class="panel hidden"
+        >
+
+          <button
+            id="volver-panel"
+            class="secondary"
+            type="button"
+          >
+            ← Volver al panel
+          </button>
+
+
+          <div
+            id="modulo-contenido"
+            class="modulo-contenido"
+          >
+
+          </div>
+
+        </section>
+
       </main>
+
     </section>
+
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- =====================================================
+       SUPABASE
+       ===================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+
+  <!-- =====================================================
+       CONFIGURACIÓN DE SUPABASE
+       ===================================================== -->
+
   <script src="config.js"></script>
+
+
+  <!-- =====================================================
+       APLICACIÓN
+       ===================================================== -->
+
   <script src="app.js"></script>
+
 </body>
+
 </html>
