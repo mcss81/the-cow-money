@@ -14,9 +14,7 @@
 
   <div id="app">
 
-    <!-- =====================================================
-         PANTALLA DE LOGIN
-         ===================================================== -->
+    <!-- LOGIN -->
 
     <section id="login-screen" class="screen login-screen">
 
@@ -75,9 +73,7 @@
     </section>
 
 
-    <!-- =====================================================
-         PANTALLA PRINCIPAL
-         ===================================================== -->
+    <!-- PANEL PRINCIPAL -->
 
     <section
       id="main-screen"
@@ -101,14 +97,13 @@
         <button
           id="logout"
           class="secondary"
+          type="button"
         >
           Salir
         </button>
 
       </header>
 
-
-      <!-- CONTENIDO PRINCIPAL -->
 
       <main class="container">
 
@@ -122,11 +117,10 @@
         </p>
 
 
-        <!-- =================================================
-             MENÚ PRINCIPAL
-             ================================================= -->
+        <!-- MENÚ -->
 
         <div class="cards">
+
 
           <!-- SOCIOS -->
 
@@ -217,9 +211,7 @@
         </div>
 
 
-        <!-- =================================================
-             ESTADO DE CONEXIÓN
-             ================================================= -->
+        <!-- ESTADO DEL SISTEMA -->
 
         <section class="panel">
 
@@ -232,28 +224,6 @@
             class="status"
           >
             Comprobando conexión con Supabase...
-          </div>
-
-        </section>
-
-
-        <!-- =================================================
-             LISTA DE SOCIOS
-             ================================================= -->
-
-        <section
-          id="socios-inicio"
-          class="panel"
-        >
-
-          <h3>
-            Socios registrados
-          </h3>
-
-          <div id="socios-lista">
-
-            Cargando socios...
-
           </div>
 
         </section>
@@ -280,9 +250,7 @@
           <div
             id="modulo-contenido"
             class="modulo-contenido"
-          >
-
-          </div>
+          ></div>
 
         </section>
 
@@ -293,25 +261,15 @@
   </div>
 
 
-  <!-- =====================================================
-       SUPABASE
-       ===================================================== -->
+  <!-- SUPABASE -->
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-  ></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-  <!-- =====================================================
-       CONFIGURACIÓN DE SUPABASE
-       ===================================================== -->
+  <!-- CONFIGURACIÓN -->
 
   <script src="config.js"></script>
 
-
-  <!-- =====================================================
-       APLICACIÓN
-       ===================================================== -->
+  <!-- APLICACIÓN -->
 
   <script src="app.js"></script>
 
