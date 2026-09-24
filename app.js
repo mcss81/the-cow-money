@@ -1,11 +1,12 @@
 // ============================================================
 // THE COW MONEY
-// Aplicación principal
+// APP PRINCIPAL
 // ============================================================
 
-// ------------------------------------------------------------
+
+// ============================================================
 // ELEMENTOS DE LA PÁGINA
-// ------------------------------------------------------------
+// ============================================================
 
 const loginScreen = document.getElementById("login-screen");
 const mainScreen = document.getElementById("main-screen");
@@ -41,16 +42,16 @@ const menuCards =
     document.querySelectorAll(".menu-card");
 
 
-// ------------------------------------------------------------
+// ============================================================
 // SUPABASE
-// ------------------------------------------------------------
+// ============================================================
 
 let supabaseClient = null;
 
 
-// ------------------------------------------------------------
+// ============================================================
 // INICIALIZAR SUPABASE
-// ------------------------------------------------------------
+// ============================================================
 
 if (
     window.SUPABASE_URL &&
@@ -76,9 +77,9 @@ if (
 }
 
 
-// ------------------------------------------------------------
-// MOSTRAR PANTALLA PRINCIPAL
-// ------------------------------------------------------------
+// ============================================================
+// MOSTRAR PANEL PRINCIPAL
+// ============================================================
 
 function showMain(user) {
 
@@ -96,9 +97,9 @@ function showMain(user) {
 }
 
 
-// ------------------------------------------------------------
+// ============================================================
 // MOSTRAR LOGIN
-// ------------------------------------------------------------
+// ============================================================
 
 function showLogin() {
 
@@ -109,9 +110,9 @@ function showLogin() {
 }
 
 
-// ------------------------------------------------------------
+// ============================================================
 // LOGIN
-// ------------------------------------------------------------
+// ============================================================
 
 loginForm.addEventListener(
     "submit",
@@ -171,9 +172,9 @@ loginForm.addEventListener(
 );
 
 
-// ------------------------------------------------------------
+// ============================================================
 // CERRAR SESIÓN
-// ------------------------------------------------------------
+// ============================================================
 
 logout.addEventListener(
     "click",
@@ -191,9 +192,9 @@ logout.addEventListener(
 );
 
 
-// ------------------------------------------------------------
+// ============================================================
 // CARGAR SOCIOS
-// ------------------------------------------------------------
+// ============================================================
 
 async function cargarSocios() {
 
@@ -243,9 +244,9 @@ async function cargarSocios() {
             data || [];
 
 
-        // --------------------------------------------
+        // ----------------------------------------------------
         // CANTIDAD DE SOCIOS
-        // --------------------------------------------
+        // ----------------------------------------------------
 
         const sociosActivos =
             socios.filter(
@@ -261,18 +262,21 @@ async function cargarSocios() {
             sociosActivos.length;
 
 
-        // --------------------------------------------
+        // ----------------------------------------------------
         // ESTADO DE CONEXIÓN
-        // --------------------------------------------
+        // ----------------------------------------------------
 
         connectionStatus.textContent =
             "Conexión correcta. Socios encontrados: " +
             socios.length;
 
 
-        // --------------------------------------------
-        // SI NO HAY SOCIOS
-        // --------------------------------------------
+        // ----------------------------------------------------
+        // LISTA DE SOCIOS
+        // ----------------------------------------------------
+
+        sociosLista.innerHTML = "";
+
 
         if (socios.length === 0) {
 
@@ -282,13 +286,6 @@ async function cargarSocios() {
             return;
 
         }
-
-
-        // --------------------------------------------
-        // MOSTRAR SOCIOS
-        // --------------------------------------------
-
-        sociosLista.innerHTML = "";
 
 
         socios.forEach(
@@ -359,9 +356,9 @@ async function cargarSocios() {
 }
 
 
-// ------------------------------------------------------------
+// ============================================================
 // CARGAR DATOS INICIALES
-// ------------------------------------------------------------
+// ============================================================
 
 async function cargarDatosIniciales() {
 
@@ -376,43 +373,39 @@ async function cargarDatosIniciales() {
 }
 
 
-// ------------------------------------------------------------
-// MENÚ DE MÓDULOS
-// ------------------------------------------------------------
-
-menuCards.forEach(
-    function (card) {
-
-        card.addEventListener(
-            "click",
-            function () {
-
-                const modulo =
-                    card.dataset.modulo;
-
-                abrirModulo(modulo);
-
-            }
-        );
-
-    }
-);
-
-
-// ------------------------------------------------------------
+// ============================================================
 // ABRIR MÓDULO
-// ------------------------------------------------------------
+// ============================================================
 
 function abrirModulo(modulo) {
 
-    sociosInicio.classList.add("hidden");
+    console.log(
+        "Abriendo módulo:",
+        modulo
+    );
 
-    moduloScreen.classList.remove("hidden");
+
+    // Ocultar lista inicial de socios
+
+    if (sociosInicio) {
+
+        sociosInicio.classList.add("hidden");
+
+    }
 
 
-    // --------------------------------------------
+    // Mostrar pantalla del módulo
+
+    if (moduloScreen) {
+
+        moduloScreen.classList.remove("hidden");
+
+    }
+
+
+    // --------------------------------------------------------
     // SOCIOS
-    // --------------------------------------------
+    // --------------------------------------------------------
 
     if (modulo === "socios") {
 
@@ -421,17 +414,25 @@ function abrirModulo(modulo) {
             <h2>👥 Socios</h2>
 
             <p>
-                Aquí administraremos los socios
-                de The Cow Money.
+                Administración de los socios de
+                The Cow Money.
             </p>
 
             <div class="modulo-info">
 
-                <h3>Socios registrados</h3>
+                <h3>
+                    Socios registrados
+                </h3>
 
                 <p>
-                    Los socios actualmente registrados
-                    en Supabase aparecen aquí.
+                    Actualmente existen
+                    ${cantidadSocios.textContent}
+                    socios activos.
+                </p>
+
+                <p>
+                    La información se está obteniendo
+                    directamente desde Supabase.
                 </p>
 
             </div>
@@ -443,9 +444,9 @@ function abrirModulo(modulo) {
     }
 
 
-    // --------------------------------------------
+    // --------------------------------------------------------
     // APORTES
-    // --------------------------------------------
+    // --------------------------------------------------------
 
     if (modulo === "aportes") {
 
@@ -454,16 +455,18 @@ function abrirModulo(modulo) {
             <h2>💵 Aportes</h2>
 
             <p>
-                Módulo de control de aportes mensuales.
+                Control de aportes mensuales y multas.
             </p>
 
             <div class="modulo-info">
 
-                <h3>Próximamente</h3>
+                <h3>
+                    Módulo de aportes
+                </h3>
 
                 <p>
-                    Aquí mostraremos los aportes,
-                    multas, pagos y saldos.
+                    Aquí construiremos el control
+                    de aportes, pagos, multas y saldos.
                 </p>
 
             </div>
@@ -475,9 +478,9 @@ function abrirModulo(modulo) {
     }
 
 
-    // --------------------------------------------
+    // --------------------------------------------------------
     // PRÉSTAMOS
-    // --------------------------------------------
+    // --------------------------------------------------------
 
     if (modulo === "prestamos") {
 
@@ -486,17 +489,18 @@ function abrirModulo(modulo) {
             <h2>🏦 Préstamos</h2>
 
             <p>
-                Módulo de solicitudes y administración
-                de préstamos.
+                Administración de préstamos.
             </p>
 
             <div class="modulo-info">
 
-                <h3>Próximamente</h3>
+                <h3>
+                    Módulo de préstamos
+                </h3>
 
                 <p>
-                    Aquí mostraremos solicitudes,
-                    préstamos activos, cuotas y renovaciones.
+                    Aquí construiremos las solicitudes,
+                    aprobaciones, cuotas, pagos y renovaciones.
                 </p>
 
             </div>
@@ -508,9 +512,9 @@ function abrirModulo(modulo) {
     }
 
 
-    // --------------------------------------------
+    // --------------------------------------------------------
     // CAJA
-    // --------------------------------------------
+    // --------------------------------------------------------
 
     if (modulo === "caja") {
 
@@ -524,11 +528,13 @@ function abrirModulo(modulo) {
 
             <div class="modulo-info">
 
-                <h3>Próximamente</h3>
+                <h3>
+                    Módulo de caja
+                </h3>
 
                 <p>
-                    Aquí mostraremos ingresos,
-                    egresos y movimientos registrados.
+                    Aquí construiremos el control
+                    de ingresos y movimientos.
                 </p>
 
             </div>
@@ -542,27 +548,88 @@ function abrirModulo(modulo) {
 }
 
 
-// ------------------------------------------------------------
-// VOLVER AL PANEL
-// ------------------------------------------------------------
+// ============================================================
+// CONFIGURAR BOTONES DEL MENÚ
+// ============================================================
 
-volverPanel.addEventListener(
-    "click",
-    function () {
+function configurarMenu() {
 
-        moduloScreen.classList.add("hidden");
-
-        sociosInicio.classList.remove("hidden");
-
-    }
-);
+    const botones =
+        document.querySelectorAll(
+            ".menu-card"
+        );
 
 
-// ------------------------------------------------------------
-// COMPROBAR SESIÓN AL ABRIR LA PÁGINA
-// ------------------------------------------------------------
+    console.log(
+        "Botones encontrados:",
+        botones.length
+    );
+
+
+    botones.forEach(
+        function (boton) {
+
+            boton.onclick =
+                function () {
+
+                    const modulo =
+                        boton.getAttribute(
+                            "data-modulo"
+                        );
+
+
+                    console.log(
+                        "Botón presionado:",
+                        modulo
+                    );
+
+
+                    abrirModulo(modulo);
+
+                };
+
+        }
+    );
+
+}
+
+
+// ============================================================
+// BOTÓN VOLVER
+// ============================================================
+
+if (volverPanel) {
+
+    volverPanel.onclick =
+        function () {
+
+            moduloScreen.classList.add(
+                "hidden"
+            );
+
+            sociosInicio.classList.remove(
+                "hidden"
+            );
+
+        };
+
+}
+
+
+// ============================================================
+// INICIAR APLICACIÓN
+// ============================================================
 
 (async function () {
+
+    // Configuramos los botones
+    // después de cargar todo el HTML.
+
+    configurarMenu();
+
+
+    // Si no existe Supabase,
+    // no continuamos.
 
     if (!supabaseClient) {
 
@@ -570,6 +637,8 @@ volverPanel.addEventListener(
 
     }
 
+
+    // Comprobar sesión actual.
 
     const {
         data
@@ -582,6 +651,7 @@ volverPanel.addEventListener(
         showMain(
             data.session.user
         );
+
 
         await cargarDatosIniciales();
 
