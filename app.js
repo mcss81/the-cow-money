@@ -3,9 +3,6 @@
 // APP PRINCIPAL
 // ============================================================
 
-
-
-
 // ============================================================
 // ELEMENTOS
 // ============================================================
@@ -40,6 +37,10 @@ const volverPanel =
 // ============================================================
 
 let supabaseClient = null;
+
+let usuarioActual = null;
+
+let usuarioEsAdmin = false;
 
 
 if (
@@ -100,6 +101,57 @@ function showLogin() {
 
 
 // ============================================================
+// OBTENER DATOS DEL USUARIO
+// ============================================================
+
+async function cargarUsuarioActual(user) {
+
+    usuarioActual = user;
+
+    usuarioEsAdmin = false;
+
+    if (!supabaseClient || !user) {
+
+        return;
+
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("socios")
+            .select("id,nombre,email,rol,estado,user_id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+
+    if (error) {
+
+        console.error(
+            "Error consultando usuario:",
+            error
+        );
+
+        return;
+
+    }
+
+
+    if (data) {
+
+        usuarioEsAdmin =
+            data.rol === "ADMIN" &&
+            data.estado === "ACTIVO";
+
+    }
+
+}
+
+
+// ============================================================
 // LOGIN
 // ============================================================
 
@@ -155,6 +207,8 @@ loginForm.addEventListener(
         }
 
 
+        await cargarUsuarioActual(data.user);
+
         showMain(data.user);
 
         await cargarDatosIniciales();
@@ -177,6 +231,10 @@ logout.addEventListener(
 
         }
 
+        usuarioActual = null;
+
+        usuarioEsAdmin = false;
+
         showLogin();
 
     }
@@ -184,7 +242,7 @@ logout.addEventListener(
 
 
 // ============================================================
-// OBTENER SOCIOS DESDE SUPABASE
+// OBTENER SOCIOS
 // ============================================================
 
 async function obtenerSocios() {
@@ -203,7 +261,7 @@ async function obtenerSocios() {
         await supabaseClient
             .from("socios")
             .select(
-                "id,nombre,email,rol,estado"
+                "id,nombre,email,telefono,fecha_ingreso,rol,estado,user_id"
             )
             .order(
                 "nombre",
@@ -291,8 +349,6 @@ async function abrirModulo(modulo) {
     );
 
 
-    // Mostrar pantalla del módulo
-
     moduloScreen.classList.remove(
         "hidden"
     );
@@ -315,17 +371,98 @@ async function abrirModulo(modulo) {
 
             <div class="modulo-info">
 
-                <h3>
-                    Socios registrados
-                </h3>
+                <div class="socios-cabecera">
+
+                    <div>
+
+                        <h3>
+                            Socios registrados
+                        </h3>
+
+                        <p>
+                            Aquí puedes consultar
+                            los socios del banquito.
+                        </p>
+
+                    </div>
+
+                    ${
+                        usuarioEsAdmin
+                        ?
+                        `
+                        <button
+                            id="nuevo-socio"
+                            class="primary"
+                            type="button"
+                        >
+                            + Nuevo socio
+                        </button>
+                        `
+                        :
+                        ""
+                    }
+
+                </div>
+
+
+                <div class="buscador-socios">
+
+                    <input
+                        id="buscar-socio"
+                        type="text"
+                        placeholder="🔎 Buscar socio por nombre..."
+                    >
+
+                </div>
+
 
                 <div id="lista-socios">
+
                     Cargando socios...
+
                 </div>
 
             </div>
 
         `;
+
+
+        const buscar =
+            document.getElementById(
+                "buscar-socio"
+            );
+
+
+        if (buscar) {
+
+            buscar.addEventListener(
+                "input",
+                function () {
+
+                    filtrarSocios(
+                        buscar.value
+                    );
+
+                }
+            );
+
+        }
+
+
+        const nuevoSocio =
+            document.getElementById(
+                "nuevo-socio"
+            );
+
+
+        if (nuevoSocio) {
+
+            nuevoSocio.addEventListener(
+                "click",
+                mostrarFormularioNuevoSocio
+            );
+
+        }
 
 
         await mostrarSocios();
@@ -441,7 +578,14 @@ async function abrirModulo(modulo) {
 
 
 // ============================================================
-// MOSTRAR SOCIOS DENTRO DEL MÓDULO
+// LISTA DE SOCIOS
+// ============================================================
+
+let todosLosSocios = [];
+
+
+// ============================================================
+// MOSTRAR SOCIOS
 // ============================================================
 
 async function mostrarSocios() {
@@ -466,15 +610,42 @@ async function mostrarSocios() {
     `;
 
 
-    const socios =
+    todosLosSocios =
         await obtenerSocios();
+
+
+    renderizarSocios(
+        todosLosSocios
+    );
+
+}
+
+
+// ============================================================
+// MOSTRAR TABLA
+// ============================================================
+
+function renderizarSocios(socios) {
+
+    const lista =
+        document.getElementById(
+            "lista-socios"
+        );
+
+
+    if (!lista) {
+
+        return;
+
+    }
 
 
     if (socios.length === 0) {
 
         lista.innerHTML = `
             <p>
-                No existen socios registrados.
+                No existen socios que coincidan
+                con la búsqueda.
             </p>
         `;
 
@@ -482,10 +653,6 @@ async function mostrarSocios() {
 
     }
 
-
-    // ========================================================
-    // CREAR TABLA
-    // ========================================================
 
     const tabla =
         document.createElement("table");
@@ -500,21 +667,25 @@ async function mostrarSocios() {
 
             <tr>
 
-                <th>
-                    Nombre
-                </th>
+                <th>Nombre</th>
 
-                <th>
-                    Correo
-                </th>
+                <th>Correo</th>
 
-                <th>
-                    Rol
-                </th>
+                <th>Teléfono</th>
 
-                <th>
-                    Estado
-                </th>
+                <th>Ingreso</th>
+
+                <th>Rol</th>
+
+                <th>Estado</th>
+
+                ${
+                    usuarioEsAdmin
+                    ?
+                    "<th>Acciones</th>"
+                    :
+                    ""
+                }
 
             </tr>
 
@@ -526,12 +697,10 @@ async function mostrarSocios() {
 
 
     const tbody =
-        tabla.querySelector("tbody");
+        tabla.querySelector(
+            "tbody"
+        );
 
-
-    // ========================================================
-    // AGREGAR SOCIOS
-    // ========================================================
 
     socios.forEach(
         function (socio) {
@@ -554,6 +723,37 @@ async function mostrarSocios() {
                 socio.email || "Sin correo";
 
 
+            const telefono =
+                document.createElement("td");
+
+            telefono.textContent =
+                socio.telefono || "Sin teléfono";
+
+
+            const fecha =
+                document.createElement("td");
+
+            if (socio.fecha_ingreso) {
+
+                const fechaObj =
+                    new Date(
+                        socio.fecha_ingreso +
+                        "T00:00:00"
+                    );
+
+                fecha.textContent =
+                    fechaObj.toLocaleDateString(
+                        "es-EC"
+                    );
+
+            } else {
+
+                fecha.textContent =
+                    "Sin fecha";
+
+            }
+
+
             const rol =
                 document.createElement("td");
 
@@ -572,12 +772,98 @@ async function mostrarSocios() {
 
             fila.appendChild(email);
 
+            fila.appendChild(telefono);
+
+            fila.appendChild(fecha);
+
             fila.appendChild(rol);
 
             fila.appendChild(estado);
 
 
-            tbody.appendChild(fila);
+            // =================================================
+            // ACCIONES ADMIN
+            // =================================================
+
+            if (usuarioEsAdmin) {
+
+                const acciones =
+                    document.createElement("td");
+
+
+                const editar =
+                    document.createElement("button");
+
+                editar.type = "button";
+
+                editar.className =
+                    "secondary";
+
+                editar.textContent =
+                    "✏️ Editar";
+
+
+                editar.addEventListener(
+                    "click",
+                    function () {
+
+                        mostrarFormularioEditarSocio(
+                            socio
+                        );
+
+                    }
+                );
+
+
+                acciones.appendChild(
+                    editar
+                );
+
+
+                const cambiarEstado =
+                    document.createElement("button");
+
+                cambiarEstado.type =
+                    "button";
+
+                cambiarEstado.className =
+                    "secondary";
+
+                cambiarEstado.textContent =
+                    socio.estado === "ACTIVO"
+                    ?
+                    "🔴 Desactivar"
+                    :
+                    "🟢 Activar";
+
+
+                cambiarEstado.addEventListener(
+                    "click",
+                    function () {
+
+                        cambiarEstadoSocio(
+                            socio
+                        );
+
+                    }
+                );
+
+
+                acciones.appendChild(
+                    cambiarEstado
+                );
+
+
+                fila.appendChild(
+                    acciones
+                );
+
+            }
+
+
+            tbody.appendChild(
+                fila
+            );
 
         }
     );
@@ -585,7 +871,618 @@ async function mostrarSocios() {
 
     lista.innerHTML = "";
 
-    lista.appendChild(tabla);
+    lista.appendChild(
+        tabla
+    );
+
+}
+
+
+// ============================================================
+// BUSCAR SOCIO
+// ============================================================
+
+function filtrarSocios(texto) {
+
+    const busqueda =
+        texto
+            .toLowerCase()
+            .trim();
+
+
+    if (!busqueda) {
+
+        renderizarSocios(
+            todosLosSocios
+        );
+
+        return;
+
+    }
+
+
+    const filtrados =
+        todosLosSocios.filter(
+            function (socio) {
+
+                const nombre =
+                    (
+                        socio.nombre || ""
+                    ).toLowerCase();
+
+
+                const email =
+                    (
+                        socio.email || ""
+                    ).toLowerCase();
+
+
+                const telefono =
+                    (
+                        socio.telefono || ""
+                    ).toLowerCase();
+
+
+                return (
+                    nombre.includes(busqueda) ||
+                    email.includes(busqueda) ||
+                    telefono.includes(busqueda)
+                );
+
+            }
+        );
+
+
+    renderizarSocios(
+        filtrados
+    );
+
+}
+
+
+// ============================================================
+// FORMULARIO NUEVO SOCIO
+// ============================================================
+
+function mostrarFormularioNuevoSocio() {
+
+    moduloContenido.innerHTML = `
+
+        <h2>➕ Nuevo socio</h2>
+
+        <div class="modulo-info">
+
+            <label>
+                Nombre
+            </label>
+
+            <input
+                id="nuevo-nombre"
+                type="text"
+                placeholder="Nombre completo"
+            >
+
+
+            <label>
+                Correo
+            </label>
+
+            <input
+                id="nuevo-email"
+                type="email"
+                placeholder="correo@ejemplo.com"
+            >
+
+
+            <label>
+                Teléfono
+            </label>
+
+            <input
+                id="nuevo-telefono"
+                type="text"
+                placeholder="Teléfono"
+            >
+
+
+            <label>
+                Fecha de ingreso
+            </label>
+
+            <input
+                id="nuevo-fecha"
+                type="date"
+            >
+
+
+            <div style="margin-top:20px">
+
+                <button
+                    id="guardar-nuevo"
+                    class="primary"
+                    type="button"
+                >
+                    Guardar socio
+                </button>
+
+                <button
+                    id="cancelar-nuevo"
+                    class="secondary"
+                    type="button"
+                >
+                    Cancelar
+                </button>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    document
+        .getElementById("guardar-nuevo")
+        .addEventListener(
+            "click",
+            guardarNuevoSocio
+        );
+
+
+    document
+        .getElementById("cancelar-nuevo")
+        .addEventListener(
+            "click",
+            function () {
+
+                abrirModulo("socios");
+
+            }
+        );
+
+}
+
+
+// ============================================================
+// GUARDAR NUEVO SOCIO
+// ============================================================
+
+async function guardarNuevoSocio() {
+
+    if (!usuarioEsAdmin) {
+
+        alert(
+            "Solo un administrador puede realizar esta acción."
+        );
+
+        return;
+
+    }
+
+
+    const nombre =
+        document
+            .getElementById("nuevo-nombre")
+            .value
+            .trim();
+
+
+    const email =
+        document
+            .getElementById("nuevo-email")
+            .value
+            .trim();
+
+
+    const telefono =
+        document
+            .getElementById("nuevo-telefono")
+            .value
+            .trim();
+
+
+    const fecha =
+        document
+            .getElementById("nuevo-fecha")
+            .value;
+
+
+    if (!nombre) {
+
+        alert(
+            "Debes ingresar el nombre del socio."
+        );
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("socios")
+            .insert({
+                nombre: nombre,
+                email: email || null,
+                telefono: telefono || null,
+                fecha_ingreso: fecha || null,
+                estado: "ACTIVO",
+                rol: "SOCIO"
+            });
+
+
+    if (error) {
+
+        alert(
+            "No se pudo guardar el socio:\n\n" +
+            error.message
+        );
+
+        console.error(
+            error
+        );
+
+        return;
+
+    }
+
+
+    alert(
+        "Socio creado correctamente."
+    );
+
+
+    await cargarDatosIniciales();
+
+    await abrirModulo("socios");
+
+}
+
+
+// ============================================================
+// EDITAR SOCIO
+// ============================================================
+
+function mostrarFormularioEditarSocio(socio) {
+
+    moduloContenido.innerHTML = `
+
+        <h2>✏️ Editar socio</h2>
+
+        <div class="modulo-info">
+
+            <label>
+                Nombre
+            </label>
+
+            <input
+                id="editar-nombre"
+                type="text"
+                value="${escapeHtml(socio.nombre || "")}"
+            >
+
+
+            <label>
+                Correo
+            </label>
+
+            <input
+                id="editar-email"
+                type="email"
+                value="${escapeHtml(socio.email || "")}"
+            >
+
+
+            <label>
+                Teléfono
+            </label>
+
+            <input
+                id="editar-telefono"
+                type="text"
+                value="${escapeHtml(socio.telefono || "")}"
+            >
+
+
+            <label>
+                Fecha de ingreso
+            </label>
+
+            <input
+                id="editar-fecha"
+                type="date"
+                value="${socio.fecha_ingreso || ""}"
+            >
+
+
+            <label>
+                Rol
+            </label>
+
+            <select
+                id="editar-rol"
+            >
+
+                <option
+                    value="SOCIO"
+                    ${
+                        socio.rol === "SOCIO"
+                        ? "selected"
+                        : ""
+                    }
+                >
+                    SOCIO
+                </option>
+
+                <option
+                    value="ADMIN"
+                    ${
+                        socio.rol === "ADMIN"
+                        ? "selected"
+                        : ""
+                    }
+                >
+                    ADMIN
+                </option>
+
+            </select>
+
+
+            <div style="margin-top:20px">
+
+                <button
+                    id="guardar-edicion"
+                    class="primary"
+                    type="button"
+                >
+                    Guardar cambios
+                </button>
+
+                <button
+                    id="cancelar-edicion"
+                    class="secondary"
+                    type="button"
+                >
+                    Cancelar
+                </button>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    document
+        .getElementById("guardar-edicion")
+        .addEventListener(
+            "click",
+            function () {
+
+                guardarEdicionSocio(
+                    socio.id
+                );
+
+            }
+        );
+
+
+    document
+        .getElementById("cancelar-edicion")
+        .addEventListener(
+            "click",
+            function () {
+
+                abrirModulo("socios");
+
+            }
+        );
+
+}
+
+
+// ============================================================
+// GUARDAR EDICIÓN
+// ============================================================
+
+async function guardarEdicionSocio(id) {
+
+    if (!usuarioEsAdmin) {
+
+        alert(
+            "Solo un administrador puede realizar esta acción."
+        );
+
+        return;
+
+    }
+
+
+    const nombre =
+        document
+            .getElementById("editar-nombre")
+            .value
+            .trim();
+
+
+    const email =
+        document
+            .getElementById("editar-email")
+            .value
+            .trim();
+
+
+    const telefono =
+        document
+            .getElementById("editar-telefono")
+            .value
+            .trim();
+
+
+    const fecha =
+        document
+            .getElementById("editar-fecha")
+            .value;
+
+
+    const rol =
+        document
+            .getElementById("editar-rol")
+            .value;
+
+
+    if (!nombre) {
+
+        alert(
+            "El nombre es obligatorio."
+        );
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("socios")
+            .update({
+                nombre: nombre,
+                email: email || null,
+                telefono: telefono || null,
+                fecha_ingreso: fecha || null,
+                rol: rol
+            })
+            .eq(
+                "id",
+                id
+            );
+
+
+    if (error) {
+
+        alert(
+            "No se pudo actualizar el socio:\n\n" +
+            error.message
+        );
+
+        console.error(
+            error
+        );
+
+        return;
+
+    }
+
+
+    alert(
+        "Socio actualizado correctamente."
+    );
+
+
+    await cargarDatosIniciales();
+
+    await abrirModulo("socios");
+
+}
+
+
+// ============================================================
+// CAMBIAR ESTADO
+// ============================================================
+
+async function cambiarEstadoSocio(socio) {
+
+    if (!usuarioEsAdmin) {
+
+        alert(
+            "Solo un administrador puede realizar esta acción."
+        );
+
+        return;
+
+    }
+
+
+    const nuevoEstado =
+        socio.estado === "ACTIVO"
+        ?
+        "INACTIVO"
+        :
+        "ACTIVO";
+
+
+    const confirmar =
+        confirm(
+            "¿Deseas cambiar a " +
+            socio.nombre +
+            " al estado " +
+            nuevoEstado +
+            "?"
+        );
+
+
+    if (!confirmar) {
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("socios")
+            .update({
+                estado: nuevoEstado
+            })
+            .eq(
+                "id",
+                socio.id
+            );
+
+
+    if (error) {
+
+        alert(
+            "No se pudo cambiar el estado:\n\n" +
+            error.message
+        );
+
+        console.error(
+            error
+        );
+
+        return;
+
+    }
+
+
+    await cargarDatosIniciales();
+
+    await abrirModulo("socios");
+
+}
+
+
+// ============================================================
+// ESCAPAR HTML
+// ============================================================
+
+function escapeHtml(texto) {
+
+    return String(texto)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 
 }
 
@@ -666,11 +1563,6 @@ if (volverPanel) {
 
 (async function () {
 
-    console.log(
-        "INICIANDO THE COW MONEY"
-    );
-
-
     configurarMenu();
 
 
@@ -688,6 +1580,11 @@ if (volverPanel) {
 
 
     if (data.session) {
+
+        await cargarUsuarioActual(
+            data.session.user
+        );
+
 
         showMain(
             data.session.user
