@@ -5,7 +5,7 @@
 
 
 // ============================================================
-// ELEMENTOS DE LA PÁGINA
+// ELEMENTOS
 // ============================================================
 
 const loginScreen = document.getElementById("login-screen");
@@ -47,7 +47,7 @@ let supabaseClient = null;
 
 
 // ============================================================
-// INICIALIZAR SUPABASE
+// INICIAR SUPABASE
 // ============================================================
 
 if (
@@ -75,7 +75,7 @@ if (
 
 
 // ============================================================
-// MOSTRAR PANEL PRINCIPAL
+// MOSTRAR PANEL
 // ============================================================
 
 function showMain(user) {
@@ -127,7 +127,6 @@ loginForm.addEventListener(
             return;
 
         }
-
 
         const email =
             document
@@ -237,8 +236,7 @@ async function cargarSocios() {
         }
 
 
-        const socios =
-            data || [];
+        const socios = data || [];
 
 
         const sociosActivos =
@@ -273,6 +271,24 @@ async function cargarSocios() {
         }
 
 
+        // Encabezado
+
+        const encabezado =
+            document.createElement("div");
+
+        encabezado.className =
+            "socio-row socio-header";
+
+        encabezado.innerHTML = `
+            <strong>Nombre</strong>
+            <strong>Correo</strong>
+            <strong>Rol</strong>
+            <strong>Estado</strong>
+        `;
+
+        sociosLista.appendChild(encabezado);
+
+
         socios.forEach(
             function (socio) {
 
@@ -283,38 +299,12 @@ async function cargarSocios() {
                     "socio-row";
 
 
-                const nombre =
-                    document.createElement("strong");
-
-                nombre.textContent =
-                    socio.nombre || "Sin nombre";
-
-
-                const email =
-                    document.createElement("span");
-
-                email.textContent =
-                    socio.email || "Sin correo";
-
-
-                const rol =
-                    document.createElement("span");
-
-                rol.textContent =
-                    socio.rol || "SOCIO";
-
-
-                const estado =
-                    document.createElement("span");
-
-                estado.textContent =
-                    socio.estado || "ACTIVO";
-
-
-                fila.appendChild(nombre);
-                fila.appendChild(email);
-                fila.appendChild(rol);
-                fila.appendChild(estado);
+                fila.innerHTML = `
+                    <span>${socio.nombre || "Sin nombre"}</span>
+                    <span>${socio.email || "Sin correo"}</span>
+                    <span>${socio.rol || "SOCIO"}</span>
+                    <span>${socio.estado || "ACTIVO"}</span>
+                `;
 
 
                 sociosLista.appendChild(fila);
@@ -339,6 +329,55 @@ async function cargarSocios() {
 
 
 // ============================================================
+// FORMATEAR FECHA
+// ============================================================
+
+function formatearFecha(fecha) {
+
+    if (!fecha) {
+
+        return "-";
+
+    }
+
+    const partes =
+        fecha.split("-");
+
+    if (partes.length !== 3) {
+
+        return fecha;
+
+    }
+
+    return (
+        partes[2] +
+        "/" +
+        partes[1] +
+        "/" +
+        partes[0]
+    );
+
+}
+
+
+// ============================================================
+// FORMATEAR DINERO
+// ============================================================
+
+function formatearDinero(valor) {
+
+    const numero =
+        Number(valor || 0);
+
+    return (
+        "$ " +
+        numero.toFixed(2)
+    );
+
+}
+
+
+// ============================================================
 // CARGAR APORTES
 // ============================================================
 
@@ -353,343 +392,42 @@ async function cargarAportes() {
 
     moduloContenido.innerHTML = `
         <h2>💵 Aportes</h2>
-
-        <p>
-            Cargando aportes...
-        </p>
+        <p>Cargando información de aportes...</p>
     `;
 
 
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .from("aportes")
-                .select(`
-                    id,
-                    socio_id,
-                    fecha_vencimiento,
-                    valor_aporte,
-                    fecha_pago,
-                    estado,
-                    multa,
-                    total_pagado,
-                    observacion,
-                    socios (
-                        nombre
-                    )
-                `)
-                .order(
-                    "fecha_vencimiento",
-                    {
-                        ascending: false
-                    }
-                );
-
-
-        if (error) {
-
-            console.error(
-                "Error cargando aportes:",
-                error
-            );
-
-
-            moduloContenido.innerHTML = `
-
-                <h2>💵 Aportes</h2>
-
-                <div class="modulo-info">
-
-                    <h3>Error al cargar los aportes</h3>
-
-                    <p>
-                        ${error.message}
-                    </p>
-
-                </div>
-
-            `;
-
-            return;
-
-        }
-
-
-        const aportes =
-            data || [];
-
-
-        // ====================================================
-        // RESUMEN
-        // ====================================================
-
-        let pagados = 0;
-        let pendientes = 0;
-        let atrasados = 0;
-        let multas = 0;
-        let totalPendiente = 0;
-
-
-        aportes.forEach(
-            function (aporte) {
-
-                if (aporte.estado === "PAGADO") {
-
-                    pagados++;
-
-                }
-
-                if (aporte.estado === "PENDIENTE") {
-
-                    pendientes++;
-
-                }
-
-                if (aporte.estado === "ATRASADO") {
-
-                    atrasados++;
-
-                }
-
-
-                multas +=
-                    Number(aporte.multa || 0);
-
-
-                if (
-                    aporte.estado !== "PAGADO"
-                ) {
-
-                    totalPendiente +=
-                        Number(aporte.valor_aporte || 0) +
-                        Number(aporte.multa || 0);
-
-                }
-
-            }
-        );
-
-
-        // ====================================================
-        // CREAR PANTALLA
-        // ====================================================
-
-        let html = `
-
-            <h2>💵 Aportes</h2>
-
-            <p>
-                Control de aportes mensuales y multas.
-            </p>
-
-
-            <div class="aportes-resumen">
-
-                <div class="aporte-resumen-card">
-                    <strong>${aportes.length}</strong>
-                    <span>Total aportes</span>
-                </div>
-
-                <div class="aporte-resumen-card">
-                    <strong>${pagados}</strong>
-                    <span>Pagados</span>
-                </div>
-
-                <div class="aporte-resumen-card">
-                    <strong>${pendientes}</strong>
-                    <span>Pendientes</span>
-                </div>
-
-                <div class="aporte-resumen-card">
-                    <strong>${atrasados}</strong>
-                    <span>Atrasados</span>
-                </div>
-
-                <div class="aporte-resumen-card">
-                    <strong>$${multas.toFixed(2)}</strong>
-                    <span>Multas</span>
-                </div>
-
-                <div class="aporte-resumen-card">
-                    <strong>$${totalPendiente.toFixed(2)}</strong>
-                    <span>Total pendiente</span>
-                </div>
-
-            </div>
-
-
-            <div class="modulo-info">
-
-                <h3>
-                    Aportes registrados
-                </h3>
-
-                <div class="aportes-tabla">
-
-                    <div class="aporte-header">
-
-                        <strong>Socio</strong>
-
-                        <strong>Vencimiento</strong>
-
-                        <strong>Aporte</strong>
-
-                        <strong>Multa</strong>
-
-                        <strong>Total pagado</strong>
-
-                        <strong>Estado</strong>
-
-                    </div>
-
-        `;
-
-
-        // ====================================================
-        // LISTAR APORTES
-        // ====================================================
-
-        if (aportes.length === 0) {
-
-            html += `
-
-                <div class="aporte-vacio">
-
-                    No existen aportes registrados.
-
-                </div>
-
-            `;
-
-        } else {
-
-
-            aportes.forEach(
-                function (aporte) {
-
-                    const socio =
-                        aporte.socios;
-
-
-                    const nombreSocio =
-                        socio
-                            ? socio.nombre
-                            : "Socio no encontrado";
-
-
-                    const valor =
-                        Number(
-                            aporte.valor_aporte || 0
-                        );
-
-
-                    const multa =
-                        Number(
-                            aporte.multa || 0
-                        );
-
-
-                    const totalPagado =
-                        Number(
-                            aporte.total_pagado || 0
-                        );
-
-
-                    let claseEstado =
-                        "";
-
-
-                    if (
-                        aporte.estado === "PAGADO"
-                    ) {
-
-                        claseEstado =
-                            "estado-pagado";
-
-                    }
-
-
-                    if (
-                        aporte.estado === "PENDIENTE"
-                    ) {
-
-                        claseEstado =
-                            "estado-pendiente";
-
-                    }
-
-
-                    if (
-                        aporte.estado === "ATRASADO"
-                    ) {
-
-                        claseEstado =
-                            "estado-atrasado";
-
-                    }
-
-
-                    html += `
-
-                        <div class="aporte-row">
-
-                            <span>
-                                ${nombreSocio}
-                            </span>
-
-                            <span>
-                                ${formatearFecha(
-                                    aporte.fecha_vencimiento
-                                )}
-                            </span>
-
-                            <span>
-                                $${valor.toFixed(2)}
-                            </span>
-
-                            <span>
-                                $${multa.toFixed(2)}
-                            </span>
-
-                            <span>
-                                $${totalPagado.toFixed(2)}
-                            </span>
-
-                            <span class="${claseEstado}">
-                                ${aporte.estado}
-                            </span>
-
-                        </div>
-
-                    `;
-
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("aportes")
+            .select(`
+                id,
+                socio_id,
+                fecha_vencimiento,
+                valor_aporte,
+                fecha_pago,
+                estado,
+                multa,
+                total_pagado,
+                observacion,
+                socios (
+                    nombre
+                )
+            `)
+            .order(
+                "fecha_vencimiento",
+                {
+                    ascending: false
                 }
             );
 
-        }
 
-
-        html += `
-
-                </div>
-
-            </div>
-
-        `;
-
-
-        moduloContenido.innerHTML =
-            html;
-
-
-    } catch (error) {
+    if (error) {
 
         console.error(
-            "Error inesperado cargando aportes:",
+            "Error cargando aportes:",
             error
         );
 
@@ -700,9 +438,7 @@ async function cargarAportes() {
 
             <div class="modulo-info">
 
-                <h3>
-                    Error inesperado
-                </h3>
+                <h3>Error al cargar los aportes</h3>
 
                 <p>
                     ${error.message}
@@ -712,59 +448,213 @@ async function cargarAportes() {
 
         `;
 
-    }
-
-}
-
-
-// ============================================================
-// FORMATEAR FECHA
-// ============================================================
-
-function formatearFecha(fecha) {
-
-    if (!fecha) {
-
-        return "-";
-
-    }
-
-
-    const partes =
-        fecha.split("-");
-
-
-    if (partes.length !== 3) {
-
-        return fecha;
-
-    }
-
-
-    return (
-        partes[2] +
-        "/" +
-        partes[1] +
-        "/" +
-        partes[0]
-    );
-
-}
-
-
-// ============================================================
-// CARGAR DATOS INICIALES
-// ============================================================
-
-async function cargarDatosIniciales() {
-
-    if (!supabaseClient) {
-
         return;
 
     }
 
-    await cargarSocios();
+
+    const aportes =
+        data || [];
+
+
+    const pendientes =
+        aportes.filter(
+            function (aporte) {
+
+                return aporte.estado === "PENDIENTE";
+
+            }
+        );
+
+
+    const pagados =
+        aportes.filter(
+            function (aporte) {
+
+                return aporte.estado === "PAGADO";
+
+            }
+        );
+
+
+    const atrasados =
+        aportes.filter(
+            function (aporte) {
+
+                return aporte.estado === "ATRASADO";
+
+            }
+        );
+
+
+    let filas = "";
+
+
+    aportes.forEach(
+        function (aporte) {
+
+            const nombre =
+                aporte.socios &&
+                aporte.socios.nombre
+                    ? aporte.socios.nombre
+                    : "Sin nombre";
+
+
+            let claseEstado =
+                "";
+
+
+            if (aporte.estado === "PAGADO") {
+
+                claseEstado =
+                    "estado-pagado";
+
+            } else if (aporte.estado === "ATRASADO") {
+
+                claseEstado =
+                    "estado-atrasado";
+
+            } else {
+
+                claseEstado =
+                    "estado-pendiente";
+
+            }
+
+
+            filas += `
+
+                <tr>
+
+                    <td>
+                        <strong>
+                            ${nombre}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${formatearFecha(
+                            aporte.fecha_vencimiento
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatearDinero(
+                            aporte.valor_aporte
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatearDinero(
+                            aporte.multa
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatearDinero(
+                            aporte.total_pagado
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatearFecha(
+                            aporte.fecha_pago
+                        )}
+                    </td>
+
+                    <td>
+                        <span class="${claseEstado}">
+                            ${aporte.estado}
+                        </span>
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+    );
+
+
+    moduloContenido.innerHTML = `
+
+        <h2>💵 Aportes</h2>
+
+        <p>
+            Control de aportes mensuales y multas.
+        </p>
+
+
+        <div class="resumen-aportes">
+
+            <div class="resumen-aporte">
+                <strong>${aportes.length}</strong>
+                <span>Total registros</span>
+            </div>
+
+            <div class="resumen-aporte">
+                <strong>${pagados.length}</strong>
+                <span>Pagados</span>
+            </div>
+
+            <div class="resumen-aporte">
+                <strong>${pendientes.length}</strong>
+                <span>Pendientes</span>
+            </div>
+
+            <div class="resumen-aporte">
+                <strong>${atrasados.length}</strong>
+                <span>Atrasados</span>
+            </div>
+
+        </div>
+
+
+        <div class="modulo-info">
+
+            <h3>
+                Registro de aportes
+            </h3>
+
+            <div class="tabla-contenedor">
+
+                <table class="tabla-aportes">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Socio</th>
+
+                            <th>Vencimiento</th>
+
+                            <th>Aporte</th>
+
+                            <th>Multa</th>
+
+                            <th>Total pagado</th>
+
+                            <th>Fecha pago</th>
+
+                            <th>Estado</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        ${filas}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    `;
 
 }
 
@@ -773,26 +663,11 @@ async function cargarDatosIniciales() {
 // ABRIR MÓDULO
 // ============================================================
 
-async function abrirModulo(modulo) {
+function abrirModulo(modulo) {
 
-    console.log(
-        "Abriendo módulo:",
-        modulo
-    );
+    sociosInicio.classList.add("hidden");
 
-
-    if (sociosInicio) {
-
-        sociosInicio.classList.add("hidden");
-
-    }
-
-
-    if (moduloScreen) {
-
-        moduloScreen.classList.remove("hidden");
-
-    }
+    moduloScreen.classList.remove("hidden");
 
 
     // ========================================================
@@ -801,39 +676,7 @@ async function abrirModulo(modulo) {
 
     if (modulo === "socios") {
 
-        moduloContenido.innerHTML = `
-
-            <h2>👥 Socios</h2>
-
-            <p>
-                Administración de los socios de
-                The Cow Money.
-            </p>
-
-            <div class="modulo-info">
-
-                <h3>
-                    Socios registrados
-                </h3>
-
-                <p>
-                    Actualmente existen
-                    ${cantidadSocios.textContent}
-                    socios activos.
-                </p>
-
-                <div id="socios-modulo-lista">
-
-                    Cargando socios...
-
-                </div>
-
-            </div>
-
-        `;
-
-
-        await cargarSociosModulo();
+        cargarSociosModulo();
 
         return;
 
@@ -846,7 +689,7 @@ async function abrirModulo(modulo) {
 
     if (modulo === "aportes") {
 
-        await cargarAportes();
+        cargarAportes();
 
         return;
 
@@ -870,7 +713,7 @@ async function abrirModulo(modulo) {
             <div class="modulo-info">
 
                 <h3>
-                    Módulo de préstamos
+                    Próximamente
                 </h3>
 
                 <p>
@@ -904,12 +747,12 @@ async function abrirModulo(modulo) {
             <div class="modulo-info">
 
                 <h3>
-                    Módulo de caja
+                    Próximamente
                 </h3>
 
                 <p>
                     Aquí construiremos el control
-                    de ingresos y movimientos.
+                    de ingresos y movimientos de caja.
                 </p>
 
             </div>
@@ -924,22 +767,32 @@ async function abrirModulo(modulo) {
 
 
 // ============================================================
-// CARGAR SOCIOS DENTRO DEL MÓDULO
+// MÓDULO SOCIOS
 // ============================================================
 
 async function cargarSociosModulo() {
 
-    const lista =
-        document.getElementById(
-            "socios-modulo-lista"
-        );
+    moduloContenido.innerHTML = `
 
+        <h2>👥 Socios</h2>
 
-    if (!lista || !supabaseClient) {
+        <p>
+            Administración de los socios de The Cow Money.
+        </p>
 
-        return;
+        <div class="modulo-info">
 
-    }
+            <h3>
+                Socios registrados
+            </h3>
+
+            <p>
+                Cargando socios...
+            </p>
+
+        </div>
+
+    `;
 
 
     const {
@@ -961,8 +814,23 @@ async function cargarSociosModulo() {
 
     if (error) {
 
-        lista.innerHTML =
-            `<p>Error: ${error.message}</p>`;
+        moduloContenido.innerHTML = `
+
+            <h2>👥 Socios</h2>
+
+            <div class="modulo-info">
+
+                <h3>
+                    Error
+                </h3>
+
+                <p>
+                    ${error.message}
+                </p>
+
+            </div>
+
+        `;
 
         return;
 
@@ -973,49 +841,35 @@ async function cargarSociosModulo() {
         data || [];
 
 
-    let html = `
-
-        <div class="socios-tabla">
-
-            <div class="socio-row socio-header">
-
-                <strong>Nombre</strong>
-
-                <strong>Correo</strong>
-
-                <strong>Rol</strong>
-
-                <strong>Estado</strong>
-
-            </div>
-
-    `;
+    let filas = "";
 
 
     socios.forEach(
         function (socio) {
 
-            html += `
+            filas += `
 
-                <div class="socio-row">
+                <tr>
 
-                    <span>
-                        ${socio.nombre || "Sin nombre"}
-                    </span>
+                    <td>
+                        <strong>
+                            ${socio.nombre || "Sin nombre"}
+                        </strong>
+                    </td>
 
-                    <span>
+                    <td>
                         ${socio.email || "Sin correo"}
-                    </span>
+                    </td>
 
-                    <span>
+                    <td>
                         ${socio.rol || "SOCIO"}
-                    </span>
+                    </td>
 
-                    <span>
+                    <td>
                         ${socio.estado || "ACTIVO"}
-                    </span>
+                    </td>
 
-                </div>
+                </tr>
 
             `;
 
@@ -1023,19 +877,63 @@ async function cargarSociosModulo() {
     );
 
 
-    html += `
+    moduloContenido.innerHTML = `
+
+        <h2>👥 Socios</h2>
+
+        <p>
+            Administración de los socios de The Cow Money.
+        </p>
+
+        <div class="modulo-info">
+
+            <h3>
+                Socios registrados
+            </h3>
+
+            <p>
+                ${socios.length} socios registrados
+            </p>
+
+            <div class="tabla-contenedor">
+
+                <table class="tabla-aportes">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Nombre</th>
+
+                            <th>Correo</th>
+
+                            <th>Rol</th>
+
+                            <th>Estado</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        ${filas}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
         </div>
+
     `;
-
-
-    lista.innerHTML =
-        html;
 
 }
 
 
 // ============================================================
-// CONFIGURAR BOTONES DEL MENÚ
+// CONFIGURAR MENÚ
 // ============================================================
 
 function configurarMenu() {
@@ -1055,7 +953,8 @@ function configurarMenu() {
     botones.forEach(
         function (boton) {
 
-            boton.onclick =
+            boton.addEventListener(
+                "click",
                 function () {
 
                     const modulo =
@@ -1064,15 +963,10 @@ function configurarMenu() {
                         );
 
 
-                    console.log(
-                        "Botón presionado:",
-                        modulo
-                    );
-
-
                     abrirModulo(modulo);
 
-                };
+                }
+            );
 
         }
     );
@@ -1081,12 +975,13 @@ function configurarMenu() {
 
 
 // ============================================================
-// BOTÓN VOLVER
+// VOLVER AL PANEL
 // ============================================================
 
 if (volverPanel) {
 
-    volverPanel.onclick =
+    volverPanel.addEventListener(
+        "click",
         function () {
 
             moduloScreen.classList.add(
@@ -1097,7 +992,19 @@ if (volverPanel) {
                 "hidden"
             );
 
-        };
+        }
+    );
+
+}
+
+
+// ============================================================
+// CARGAR DATOS INICIALES
+// ============================================================
+
+async function cargarDatosIniciales() {
+
+    await cargarSocios();
 
 }
 
