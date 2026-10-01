@@ -21,8 +21,7 @@ let usuarioActual = null;
 let socios = [];
 let aportes = [];
 
-// ID del aporte que estamos editando
-let aporteEditandoId = null;
+let mesAportesSeleccionado = obtenerMesActual();
 
 
 // ============================================================
@@ -462,11 +461,8 @@ function mostrarSociosInicio(lista) {
           <tr>
 
             <th>Nombre</th>
-
             <th>Correo</th>
-
             <th>Rol</th>
-
             <th>Estado</th>
 
           </tr>
@@ -750,21 +746,10 @@ function mostrarModuloSocios() {
 
             <tr>
 
-              <th>
-                Nombre
-              </th>
-
-              <th>
-                Correo
-              </th>
-
-              <th>
-                Rol
-              </th>
-
-              <th>
-                Estado
-              </th>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Rol</th>
+              <th>Estado</th>
 
             </tr>
 
@@ -844,12 +829,10 @@ function mostrarModuloSocios() {
 
 function mostrarModuloAportes() {
 
-  // Al abrir el módulo comenzamos mostrando todos
-  aporteEditandoId = null;
-
-
   const resumen =
-    calcularResumenAportes(aportes);
+    calcularResumenAportes(
+      obtenerAportesDelMes()
+    );
 
 
   const html = `
@@ -867,80 +850,95 @@ function mostrarModuloAportes() {
     </div>
 
 
-    <!-- =====================================================
-         RESUMEN
-         ===================================================== -->
-
     <div class="resumen-aportes">
 
       <div class="resumen-card">
+
         <strong>
           ${resumen.total}
         </strong>
+
         <span>
           Total registros
         </span>
+
       </div>
 
+
       <div class="resumen-card">
+
         <strong>
           ${resumen.pagados}
         </strong>
+
         <span>
           Pagados
         </span>
+
       </div>
 
+
       <div class="resumen-card">
+
         <strong>
           ${resumen.pendientes}
         </strong>
+
         <span>
           Pendientes
         </span>
+
       </div>
 
+
       <div class="resumen-card">
+
         <strong>
           ${resumen.atrasados}
         </strong>
+
         <span>
           Atrasados
         </span>
+
       </div>
 
+
       <div class="resumen-card">
+
         <strong>
           $ ${resumen.multas.toFixed(2)}
         </strong>
+
         <span>
           Multas
         </span>
+
       </div>
 
+
       <div class="resumen-card">
+
         <strong>
           $ ${resumen.pendiente.toFixed(2)}
         </strong>
+
         <span>
           Total pendiente
         </span>
+
       </div>
 
     </div>
 
 
-    <!-- =====================================================
-         REGISTRAR / EDITAR PAGO
-         ===================================================== -->
-
     <div class="panel">
 
-      <h3 id="titulo-formulario-pago">
+      <h3>
         Registrar pago
       </h3>
 
-      <p id="texto-formulario-pago">
+      <p>
         Selecciona el socio, el aporte
         y la fecha real en que realizó
         el pago.
@@ -962,35 +960,29 @@ function mostrarModuloAportes() {
             </option>
 
             ${socios
-              .filter(
-                function (s) {
-                  return s.estado === "ACTIVO";
-                }
-              )
-              .sort(
-                function (a, b) {
-                  return a.nombre.localeCompare(
-                    b.nombre
-                  );
-                }
-              )
-              .map(
-                function (s) {
+              .filter(function (s) {
+                return s.estado === "ACTIVO";
+              })
+              .sort(function (a, b) {
+                return a.nombre.localeCompare(
+                  b.nombre
+                );
+              })
+              .map(function (s) {
 
-                  return `
+                return `
 
-                    <option
-                      value="${s.id}"
-                    >
-                      ${escapeHtml(
-                        s.nombre
-                      )}
-                    </option>
+                  <option
+                    value="${s.id}"
+                  >
+                    ${escapeHtml(
+                      s.nombre
+                    )}
+                  </option>
 
-                  `;
+                `;
 
-                }
-              )
+              })
               .join("")}
 
           </select>
@@ -1054,18 +1046,6 @@ function mostrarModuloAportes() {
       </button>
 
 
-      <button
-        id="btn-cancelar-edicion"
-        class="secondary"
-        type="button"
-        style="display:none;"
-      >
-
-        Cancelar edición
-
-      </button>
-
-
       <p
         id="mensaje-pago"
         class="message"
@@ -1074,197 +1054,58 @@ function mostrarModuloAportes() {
     </div>
 
 
-    <!-- =====================================================
-         FILTROS
-         ===================================================== -->
-
     <div class="panel">
 
-      <h3>
-        📅 Reporte mensual
-      </h3>
-
-      <div class="form-grid">
+      <div class="registro-header">
 
         <div>
 
-          <label>
-            Mes
-          </label>
+          <h3>
+            Registro de aportes
+          </h3>
 
-          <select id="filtro-mes">
-
-            <option value="TODOS">
-              Todos los meses
-            </option>
-
-            ${generarOpcionesMeses()}
-
-          </select>
+          <p>
+            Consulta los aportes por mes.
+          </p>
 
         </div>
 
 
-        <div>
+        <div class="filtros-aportes">
 
-          <label>
-            Buscar socio
-          </label>
+          <div>
 
-          <select id="filtro-socio">
+            <label>
+              Mes
+            </label>
 
-            <option value="TODOS">
-              Todos los socios
-            </option>
+            <input
+              id="filtro-mes-aportes"
+              type="month"
+              value="${mesAportesSeleccionado}"
+            />
 
-            ${socios
-              .filter(
-                function (s) {
-                  return s.estado === "ACTIVO";
-                }
-              )
-              .sort(
-                function (a, b) {
-                  return a.nombre.localeCompare(
-                    b.nombre
-                  );
-                }
-              )
-              .map(
-                function (s) {
-
-                  return `
-
-                    <option
-                      value="${s.id}"
-                    >
-                      ${escapeHtml(
-                        s.nombre
-                      )}
-                    </option>
-
-                  `;
-
-                }
-              )
-              .join("")}
-
-          </select>
-
-        </div>
+          </div>
 
 
-        <div>
-
-          <label>
-            Estado
-          </label>
-
-          <select id="filtro-estado">
-
-            <option value="TODOS">
-              Todos
-            </option>
-
-            <option value="PAGADO">
-              Pagados
-            </option>
-
-            <option value="PENDIENTE">
-              Pendientes
-            </option>
-
-            <option value="ATRASADO">
-              Atrasados
-            </option>
-
-          </select>
+          <button
+            id="btn-exportar-excel"
+            class="secondary"
+            type="button"
+          >
+            📊 Exportar Excel
+          </button>
 
         </div>
 
       </div>
 
 
-      <br>
-
-      <button
-        id="btn-exportar-excel"
-        class="primary"
-        type="button"
+      <div
+        id="tabla-aportes-mes"
       >
 
-        📊 Exportar a Excel
-
-      </button>
-
-    </div>
-
-
-    <!-- =====================================================
-         REGISTRO
-         ===================================================== -->
-
-    <div class="panel">
-
-      <h3>
-        Registro de aportes
-      </h3>
-
-
-      <div
-        id="contador-reporte"
-      ></div>
-
-
-      <div class="tabla-contenedor">
-
-        <table>
-
-          <thead>
-
-            <tr>
-
-              <th>
-                Socio
-              </th>
-
-              <th>
-                Vencimiento
-              </th>
-
-              <th>
-                Aporte
-              </th>
-
-              <th>
-                Multa
-              </th>
-
-              <th>
-                Total pagado
-              </th>
-
-              <th>
-                Fecha pago
-              </th>
-
-              <th>
-                Estado
-              </th>
-
-              <th>
-                Acción
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody id="tabla-aportes-body">
-
-          </tbody>
-
-        </table>
+        ${generarTablaAportesMes()}
 
       </div>
 
@@ -1279,107 +1120,22 @@ function mostrarModuloAportes() {
 
   configurarFormularioPago();
 
-  configurarFiltrosAportes();
-
-  actualizarTablaAportes();
+  configurarFiltroMes();
 
 }
 
 
 // ============================================================
-// GENERAR OPCIONES DE MESES
+// CONFIGURAR FILTRO DE MES
 // ============================================================
 
-function generarOpcionesMeses() {
+function configurarFiltroMes() {
 
-  const meses =
-    {};
-
-  aportes.forEach(function (aporte) {
-
-    if (!aporte.fecha_vencimiento) {
-      return;
-    }
-
-    const mes =
-      aporte.fecha_vencimiento.substring(
-        0,
-        7
-      );
-
-    meses[mes] = true;
-
-  });
-
-
-  return Object.keys(meses)
-    .sort()
-    .reverse()
-    .map(function (mes) {
-
-      const partes =
-        mes.split("-");
-
-      const año =
-        partes[0];
-
-      const numeroMes =
-        Number(partes[1]);
-
-      const nombresMeses = [
-
-        "Enero",
-        "Febrero",
-        "Marzo",
-        "Abril",
-        "Mayo",
-        "Junio",
-        "Julio",
-        "Agosto",
-        "Septiembre",
-        "Octubre",
-        "Noviembre",
-        "Diciembre"
-
-      ];
-
-      return `
-
-        <option value="${mes}">
-
-          ${nombresMeses[numeroMes - 1]}
-          ${año}
-
-        </option>
-
-      `;
-
-    })
-    .join("");
-
-}
-
-
-// ============================================================
-// CONFIGURAR FILTROS
-// ============================================================
-
-function configurarFiltrosAportes() {
-
-  const filtroMes =
+  const filtro =
     document.getElementById(
-      "filtro-mes"
+      "filtro-mes-aportes"
     );
 
-  const filtroSocio =
-    document.getElementById(
-      "filtro-socio"
-    );
-
-  const filtroEstado =
-    document.getElementById(
-      "filtro-estado"
-    );
 
   const botonExcel =
     document.getElementById(
@@ -1387,31 +1143,20 @@ function configurarFiltrosAportes() {
     );
 
 
-  if (filtroMes) {
+  if (filtro) {
 
-    filtroMes.addEventListener(
+    filtro.addEventListener(
       "change",
-      actualizarTablaAportes
-    );
+      function () {
 
-  }
-
-
-  if (filtroSocio) {
-
-    filtroSocio.addEventListener(
-      "change",
-      actualizarTablaAportes
-    );
-
-  }
+        mesAportesSeleccionado =
+          filtro.value ||
+          obtenerMesActual();
 
 
-  if (filtroEstado) {
+        actualizarVistaAportesMes();
 
-    filtroEstado.addEventListener(
-      "change",
-      actualizarTablaAportes
+      }
     );
 
   }
@@ -1430,81 +1175,99 @@ function configurarFiltrosAportes() {
 
 
 // ============================================================
-// OBTENER APORTES FILTRADOS
+// ACTUALIZAR VISTA DEL MES
 // ============================================================
 
-function obtenerAportesFiltrados() {
+function actualizarVistaAportesMes() {
 
-  const filtroMes =
+  const contenedor =
     document.getElementById(
-      "filtro-mes"
-    );
-
-  const filtroSocio =
-    document.getElementById(
-      "filtro-socio"
-    );
-
-  const filtroEstado =
-    document.getElementById(
-      "filtro-estado"
+      "tabla-aportes-mes"
     );
 
 
-  const mes =
-    filtroMes
-      ? filtroMes.value
-      : "TODOS";
+  if (!contenedor) {
+
+    return;
+
+  }
 
 
-  const socio =
-    filtroSocio
-      ? filtroSocio.value
-      : "TODOS";
+  const aportesMes =
+    obtenerAportesDelMes();
 
 
-  const estado =
-    filtroEstado
-      ? filtroEstado.value
-      : "TODOS";
+  const resumen =
+    calcularResumenAportes(
+      aportesMes
+    );
+
+
+  contenedor.innerHTML =
+    generarTablaAportesMes();
+
+
+  const tarjetas =
+    document.querySelectorAll(
+      ".resumen-aportes .resumen-card strong"
+    );
+
+
+  if (tarjetas.length >= 6) {
+
+    tarjetas[0].textContent =
+      resumen.total;
+
+    tarjetas[1].textContent =
+      resumen.pagados;
+
+    tarjetas[2].textContent =
+      resumen.pendientes;
+
+    tarjetas[3].textContent =
+      resumen.atrasados;
+
+    tarjetas[4].textContent =
+      "$ " +
+      resumen.multas.toFixed(2);
+
+    tarjetas[5].textContent =
+      "$ " +
+      resumen.pendiente.toFixed(2);
+
+  }
+
+}
+
+
+// ============================================================
+// OBTENER APORTES DEL MES
+// ============================================================
+
+function obtenerAportesDelMes() {
+
+  if (!mesAportesSeleccionado) {
+
+    return aportes;
+
+  }
 
 
   return aportes.filter(
     function (aporte) {
 
-      if (
-        mes !== "TODOS" &&
-        !aporte.fecha_vencimiento.startsWith(
-          mes
-        )
-      ) {
+      if (!aporte.fecha_vencimiento) {
 
         return false;
 
       }
 
 
-      if (
-        socio !== "TODOS" &&
-        aporte.socio_id !== socio
-      ) {
-
-        return false;
-
-      }
-
-
-      if (
-        estado !== "TODOS" &&
-        aporte.estado !== estado
-      ) {
-
-        return false;
-
-      }
-
-
-      return true;
+      return (
+        aporte.fecha_vencimiento
+          .substring(0, 7) ===
+        mesAportesSeleccionado
+      );
 
     }
   );
@@ -1513,55 +1276,192 @@ function obtenerAportesFiltrados() {
 
 
 // ============================================================
-// ACTUALIZAR TABLA
+// GENERAR TABLA DEL MES
 // ============================================================
 
-function actualizarTablaAportes() {
+function generarTablaAportesMes() {
 
-  const lista =
-    obtenerAportesFiltrados();
-
-
-  const cuerpo =
-    document.getElementById(
-      "tabla-aportes-body"
-    );
+  const aportesMes =
+    obtenerAportesDelMes();
 
 
-  const contador =
-    document.getElementById(
-      "contador-reporte"
-    );
+  if (!aportesMes.length) {
 
+    return `
 
-  if (!cuerpo) {
-    return;
-  }
+      <div class="tabla-contenedor">
 
+        <table>
 
-  if (contador) {
+          <thead>
 
-    contador.innerHTML = `
+            <tr>
 
-      <p>
+              <th>Socio</th>
+              <th>Vencimiento</th>
+              <th>Aporte</th>
+              <th>Multa</th>
+              <th>Total pagado</th>
+              <th>Fecha pago</th>
+              <th>Estado</th>
+              <th>Observación</th>
 
-        Mostrando
-        <strong>
-          ${lista.length}
-        </strong>
-        registros.
+            </tr>
 
-      </p>
+          </thead>
+
+          <tbody>
+
+            <tr>
+
+              <td colspan="8">
+
+                No hay aportes registrados
+                para este mes.
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
 
     `;
 
   }
 
 
-  cuerpo.innerHTML =
-    generarFilasAportes(
-      lista
-    );
+  return `
+
+    <div class="tabla-contenedor">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>Socio</th>
+            <th>Vencimiento</th>
+            <th>Aporte</th>
+            <th>Multa</th>
+            <th>Total pagado</th>
+            <th>Fecha pago</th>
+            <th>Estado</th>
+            <th>Observación</th>
+            <th>Acción</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${aportesMes
+            .map(function (aporte) {
+
+              const socio =
+                socios.find(
+                  function (s) {
+                    return (
+                      s.id ===
+                      aporte.socio_id
+                    );
+                  }
+                );
+
+
+              const nombre =
+                socio
+                  ? socio.nombre
+                  : "Socio desconocido";
+
+
+              return `
+
+                <tr>
+
+                  <td>
+                    ${escapeHtml(
+                      nombre
+                    )}
+                  </td>
+
+                  <td>
+                    ${formatearFecha(
+                      aporte.fecha_vencimiento
+                    )}
+                  </td>
+
+                  <td>
+                    $ ${Number(
+                      aporte.valor_aporte || 0
+                    ).toFixed(2)}
+                  </td>
+
+                  <td>
+                    $ ${Number(
+                      aporte.multa || 0
+                    ).toFixed(2)}
+                  </td>
+
+                  <td>
+                    $ ${Number(
+                      aporte.total_pagado || 0
+                    ).toFixed(2)}
+                  </td>
+
+                  <td>
+                    ${
+                      aporte.fecha_pago
+                        ? formatearFecha(
+                            aporte.fecha_pago
+                          )
+                        : "-"
+                    }
+                  </td>
+
+                  <td>
+                    ${escapeHtml(
+                      aporte.estado || ""
+                    )}
+                  </td>
+
+                  <td>
+                    ${escapeHtml(
+                      aporte.observacion || ""
+                    )}
+                  </td>
+
+                  <td>
+
+                    <button
+                      type="button"
+                      class="secondary"
+                      onclick="editarAporte('${aporte.id}')"
+                    >
+                      ✏️ Editar
+                    </button>
+
+                  </td>
+
+                </tr>
+
+              `;
+
+            })
+            .join("")}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  `;
 
 }
 
@@ -1655,115 +1555,180 @@ function calcularResumenAportes(lista) {
 
 
 // ============================================================
-// GENERAR FILAS APORTES
+// EDITAR APORTE
 // ============================================================
 
-function generarFilasAportes(lista = aportes) {
+async function editarAporte(
+  aporteId
+) {
 
-  if (!lista.length) {
+  const aporte =
+    aportes.find(
+      function (a) {
+        return a.id === aporteId;
+      }
+    );
 
-    return `
 
-      <tr>
+  if (!aporte) {
 
-        <td colspan="8">
+    alert(
+      "No se encontró el aporte."
+    );
 
-          No hay registros para este filtro.
-
-        </td>
-
-      </tr>
-
-    `;
+    return;
 
   }
 
 
-  return lista
-    .map(function (aporte) {
+  const socio =
+    socios.find(
+      function (s) {
+        return s.id === aporte.socio_id;
+      }
+    );
 
-      const socio =
-        socios.find(
-          function (s) {
-            return s.id === aporte.socio_id;
-          }
+
+  const fechaPagoActual =
+    aporte.fecha_pago || "";
+
+
+  const fechaPago =
+    prompt(
+      "Fecha real de pago (AAAA-MM-DD):",
+      fechaPagoActual
+    );
+
+
+  if (fechaPago === null) {
+
+    return;
+
+  }
+
+
+  const estado =
+    prompt(
+      "Estado: PAGADO, PENDIENTE o ATRASADO",
+      aporte.estado || "PAGADO"
+    );
+
+
+  if (estado === null) {
+
+    return;
+
+  }
+
+
+  const observacion =
+    prompt(
+      "Observación:",
+      aporte.observacion || ""
+    );
+
+
+  if (observacion === null) {
+
+    return;
+
+  }
+
+
+  let multa =
+    Number(
+      aporte.multa || 0
+    );
+
+
+  let total =
+    Number(
+      aporte.total_pagado || 0
+    );
+
+
+  if (
+    fechaPago &&
+    estado.toUpperCase() === "PAGADO"
+  ) {
+
+    const calculo =
+      calcularMulta(
+        aporte.fecha_vencimiento,
+        fechaPago
+      );
+
+
+    multa =
+      calculo.multa;
+
+
+    total =
+      Number(
+        aporte.valor_aporte || 0
+      ) +
+      multa;
+
+  }
+
+
+  try {
+
+    const {
+      error
+    } =
+      await supabaseClient
+        .from("aportes")
+        .update({
+
+          fecha_pago:
+            fechaPago || null,
+
+          estado:
+            estado.toUpperCase(),
+
+          multa:
+            multa,
+
+          total_pagado:
+            total,
+
+          observacion:
+            observacion || null
+
+        })
+        .eq(
+          "id",
+          aporteId
         );
 
 
-      const nombre =
-        socio
-          ? socio.nombre
-          : "Socio desconocido";
+    if (error) {
+
+      throw error;
+
+    }
 
 
-      return `
+    await cargarAportes();
 
-        <tr>
+    mostrarModuloAportes();
 
-          <td>
-            ${escapeHtml(nombre)}
-          </td>
 
-          <td>
-            ${formatearFecha(
-              aporte.fecha_vencimiento
-            )}
-          </td>
+  } catch (error) {
 
-          <td>
-            $ ${Number(
-              aporte.valor_aporte || 0
-            ).toFixed(2)}
-          </td>
+    console.error(
+      "Error editando aporte:",
+      error
+    );
 
-          <td>
-            $ ${Number(
-              aporte.multa || 0
-            ).toFixed(2)}
-          </td>
 
-          <td>
-            $ ${Number(
-              aporte.total_pagado || 0
-            ).toFixed(2)}
-          </td>
+    alert(
+      "No se pudo editar el aporte:\n" +
+      error.message
+    );
 
-          <td>
-            ${
-              aporte.fecha_pago
-                ? formatearFecha(
-                    aporte.fecha_pago
-                  )
-                : "-"
-            }
-          </td>
-
-          <td>
-            ${escapeHtml(
-              aporte.estado || ""
-            )}
-          </td>
-
-          <td>
-
-            <button
-              type="button"
-              class="secondary"
-              onclick="editarAporte('${aporte.id}')"
-            >
-
-              ✏️ Editar
-
-            </button>
-
-          </td>
-
-        </tr>
-
-      `;
-
-    })
-    .join("");
+  }
 
 }
 
@@ -1797,11 +1762,6 @@ function configurarFormularioPago() {
   const boton =
     document.getElementById(
       "btn-registrar-pago"
-    );
-
-  const cancelar =
-    document.getElementById(
-      "btn-cancelar-edicion"
     );
 
   const mensaje =
@@ -1870,7 +1830,9 @@ function configurarFormularioPago() {
 
 
     if (!aporte) {
+
       return;
+
     }
 
 
@@ -2031,11 +1993,8 @@ function configurarFormularioPago() {
       boton.disabled =
         true;
 
-
       boton.textContent =
-        aporteEditandoId
-          ? "Actualizando..."
-          : "Registrando...";
+        "Registrando...";
 
 
       try {
@@ -2074,13 +2033,7 @@ function configurarFormularioPago() {
 
 
         mensaje.textContent =
-          aporteEditandoId
-            ? "Pago actualizado correctamente."
-            : "Pago registrado correctamente.";
-
-
-        aporteEditandoId =
-          null;
+          "Pago registrado correctamente.";
 
 
         await cargarAportes();
@@ -2091,13 +2044,13 @@ function configurarFormularioPago() {
       } catch (error) {
 
         console.error(
-          "Error guardando pago:",
+          "Error registrando pago:",
           error
         );
 
 
         mensaje.textContent =
-          "Error al guardar el pago: " +
+          "Error al registrar el pago: " +
           error.message;
 
       }
@@ -2111,16 +2064,6 @@ function configurarFormularioPago() {
 
     }
   );
-
-
-  if (cancelar) {
-
-    cancelar.addEventListener(
-      "click",
-      cancelarEdicionAporte
-    );
-
-  }
 
 }
 
@@ -2218,245 +2161,7 @@ function cargarAportesSocio(
 
 
 // ============================================================
-// EDITAR APORTE
-// ============================================================
-
-async function editarAporte(aporteId) {
-
-  const aporte =
-    aportes.find(
-      function (a) {
-        return a.id === aporteId;
-      }
-    );
-
-
-  if (!aporte) {
-
-    alert(
-      "No se encontró el aporte."
-    );
-
-    return;
-
-  }
-
-
-  aporteEditandoId =
-    aporteId;
-
-
-  const socioSelect =
-    document.getElementById(
-      "pago-socio"
-    );
-
-  const aporteSelect =
-    document.getElementById(
-      "pago-aporte"
-    );
-
-  const fechaInput =
-    document.getElementById(
-      "pago-fecha"
-    );
-
-  const boton =
-    document.getElementById(
-      "btn-registrar-pago"
-    );
-
-  const cancelar =
-    document.getElementById(
-      "btn-cancelar-edicion"
-    );
-
-  const titulo =
-    document.getElementById(
-      "titulo-formulario-pago"
-    );
-
-  const texto =
-    document.getElementById(
-      "texto-formulario-pago"
-    );
-
-
-  if (!socioSelect) {
-
-    return;
-
-  }
-
-
-  socioSelect.value =
-    aporte.socio_id;
-
-
-  // En edición mostramos el aporte,
-  // aunque ya esté PAGADO.
-  aporteSelect.innerHTML = `
-
-    <option value="${aporte.id}">
-
-      ${formatearFecha(
-        aporte.fecha_vencimiento
-      )}
-      -
-      $
-      ${Number(
-        aporte.valor_aporte || 0
-      ).toFixed(2)}
-
-    </option>
-
-  `;
-
-
-  aporteSelect.value =
-    aporte.id;
-
-
-  fechaInput.value =
-    aporte.fecha_pago ||
-    obtenerFechaLocal();
-
-
-  titulo.textContent =
-    "✏️ Editar pago";
-
-
-  texto.textContent =
-    "Modifica la fecha de pago. La multa se recalculará automáticamente.";
-
-
-  boton.textContent =
-    "Actualizar pago";
-
-
-  if (cancelar) {
-
-    cancelar.style.display =
-      "inline-block";
-
-  }
-
-
-  // Mostrar cálculo
-  const calculo =
-    calcularMulta(
-      aporte.fecha_vencimiento,
-      fechaInput.value
-    );
-
-
-  const calcularDiv =
-    document.getElementById(
-      "calculo-pago"
-    );
-
-
-  if (calcularDiv) {
-
-    calcularDiv.innerHTML = `
-
-      <strong>
-        Cálculo del pago
-      </strong>
-
-      <br><br>
-
-      Vencimiento:
-      <strong>
-        ${formatearFecha(
-          aporte.fecha_vencimiento
-        )}
-      </strong>
-
-      <br>
-
-      Fecha de pago:
-      <strong>
-        ${formatearFecha(
-          fechaInput.value
-        )}
-      </strong>
-
-      <br>
-
-      Días de atraso:
-      <strong>
-        ${calculo.diasAtraso}
-      </strong>
-
-      <br>
-
-      Multa:
-      <strong>
-        $ ${calculo.multa.toFixed(2)}
-      </strong>
-
-      <br>
-
-      Total:
-      <strong>
-        $ ${(
-          Number(
-            aporte.valor_aporte || 0
-          ) +
-          calculo.multa
-        ).toFixed(2)}
-      </strong>
-
-    `;
-
-  }
-
-
-  // Subir al formulario
-  const formulario =
-    document.getElementById(
-      "titulo-formulario-pago"
-    );
-
-
-  if (formulario) {
-
-    formulario.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-
-  }
-
-}
-
-
-// ============================================================
-// CANCELAR EDICIÓN
-// ============================================================
-
-function cancelarEdicionAporte() {
-
-  aporteEditandoId =
-    null;
-
-
-  mostrarModuloAportes();
-
-}
-
-
-// ============================================================
 // CALCULAR MULTA
-// ============================================================
-//
-// 0 días       = $0
-// 1 a 7        = $4
-// 8 a 14       = $5
-// 15 a 21      = $6
-// 22 o más     = $7
-//
 // ============================================================
 
 function calcularMulta(
@@ -2544,193 +2249,250 @@ function calcularMulta(
 
 
 // ============================================================
-// EXPORTAR A EXCEL
+// EXPORTAR APORTES A EXCEL
+// ============================================================
+//
+// Genera un XLSX real.
+// Incluye TODOS los socios activos.
+// Si un socio no tiene aporte para el mes seleccionado,
+// también aparece en el archivo.
+//
 // ============================================================
 
-function exportarAportesExcel() {
+async function exportarAportesExcel() {
 
-  const lista =
-    obtenerAportesFiltrados();
+  try {
 
+    if (
+      typeof XLSX ===
+      "undefined"
+    ) {
 
-  if (!lista.length) {
+      alert(
+        "La librería de Excel no está cargada.\n\n" +
+        "Debes agregar SheetJS/XLSX al HTML."
+      );
 
-    alert(
-      "No hay registros para exportar."
-    );
+      return;
 
-    return;
-
-  }
-
-
-  let csv = "";
-
-
-  csv +=
-    "Socio," +
-    "Vencimiento," +
-    "Aporte," +
-    "Multa," +
-    "Total Pagado," +
-    "Fecha Pago," +
-    "Estado," +
-    "Observación\n";
+    }
 
 
-  lista.forEach(
-    function (aporte) {
+    const mes =
+      mesAportesSeleccionado ||
+      obtenerMesActual();
 
-      const socio =
-        socios.find(
-          function (s) {
-            return s.id === aporte.socio_id;
+
+    const aportesMes =
+      aportes.filter(
+        function (aporte) {
+
+          return (
+            aporte.fecha_vencimiento &&
+            aporte.fecha_vencimiento
+              .substring(0, 7) === mes
+          );
+
+        }
+      );
+
+
+    const filas = [];
+
+
+    const sociosActivos =
+      socios
+        .filter(function (socio) {
+
+          return socio.estado === "ACTIVO";
+
+        })
+        .sort(function (a, b) {
+
+          return a.nombre.localeCompare(
+            b.nombre
+          );
+
+        });
+
+
+    sociosActivos.forEach(
+      function (socio) {
+
+        const registros =
+          aportesMes.filter(
+            function (aporte) {
+
+              return (
+                aporte.socio_id ===
+                socio.id
+              );
+
+            }
+          );
+
+
+        if (!registros.length) {
+
+          filas.push({
+
+            "Socio":
+              socio.nombre || "",
+
+            "Vencimiento":
+              "",
+
+            "Aporte":
+              0,
+
+            "Multa":
+              0,
+
+            "Total Pagado":
+              0,
+
+            "Fecha Pago":
+              "",
+
+            "Estado":
+              "SIN REGISTRO",
+
+            "Observación":
+              ""
+
+          });
+
+          return;
+
+        }
+
+
+        registros.forEach(
+          function (aporte) {
+
+            filas.push({
+
+              "Socio":
+                socio.nombre || "",
+
+              "Vencimiento":
+                formatearFecha(
+                  aporte.fecha_vencimiento
+                ),
+
+              "Aporte":
+                Number(
+                  aporte.valor_aporte || 0
+                ),
+
+              "Multa":
+                Number(
+                  aporte.multa || 0
+                ),
+
+              "Total Pagado":
+                Number(
+                  aporte.total_pagado || 0
+                ),
+
+              "Fecha Pago":
+                aporte.fecha_pago
+                  ? formatearFecha(
+                      aporte.fecha_pago
+                    )
+                  : "",
+
+              "Estado":
+                aporte.estado || "",
+
+              "Observación":
+                aporte.observacion || ""
+
+            });
+
           }
         );
 
-
-      const nombre =
-        socio
-          ? socio.nombre
-          : "Socio desconocido";
-
-
-      const fila = [
-
-        nombre,
-
-        formatearFecha(
-          aporte.fecha_vencimiento
-        ),
-
-        Number(
-          aporte.valor_aporte || 0
-        ).toFixed(2),
-
-        Number(
-          aporte.multa || 0
-        ).toFixed(2),
-
-        Number(
-          aporte.total_pagado || 0
-        ).toFixed(2),
-
-        aporte.fecha_pago
-          ? formatearFecha(
-              aporte.fecha_pago
-            )
-          : "",
-
-        aporte.estado || "",
-
-        aporte.observacion || ""
-
-      ];
-
-
-      csv +=
-        fila
-          .map(
-            function (valor) {
-
-              return '"' +
-                String(valor)
-                  .replaceAll(
-                    '"',
-                    '""'
-                  ) +
-                '"';
-
-            }
-          )
-          .join(",") +
-        "\n";
-
-    }
-  );
-
-
-  // BOM para que Excel reconozca correctamente
-  // tildes y caracteres especiales.
-  const BOM =
-    "\uFEFF";
-
-
-  const blob =
-    new Blob(
-      [
-        BOM +
-        csv
-      ],
-      {
-        type:
-          "text/csv;charset=utf-8;"
       }
     );
 
 
-  const url =
-    URL.createObjectURL(
-      blob
+    const worksheet =
+      XLSX.utils.json_to_sheet(
+        filas
+      );
+
+
+    worksheet["!cols"] = [
+
+      {
+        wch: 20
+      },
+
+      {
+        wch: 15
+      },
+
+      {
+        wch: 12
+      },
+
+      {
+        wch: 12
+      },
+
+      {
+        wch: 15
+      },
+
+      {
+        wch: 15
+      },
+
+      {
+        wch: 16
+      },
+
+      {
+        wch: 30
+      }
+
+    ];
+
+
+    const workbook =
+      XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Aportes"
     );
 
 
-  const enlace =
-    document.createElement(
-      "a"
+    XLSX.writeFile(
+      workbook,
+      "The_Cow_Money_Aportes_" +
+      mes +
+      ".xlsx"
     );
 
 
-  enlace.href =
-    url;
+  } catch (error) {
 
-
-  const filtroMes =
-    document.getElementById(
-      "filtro-mes"
+    console.error(
+      "Error exportando Excel:",
+      error
     );
 
 
-  let nombreArchivo =
-    "The_Cow_Money_Aportes";
-
-
-  if (
-    filtroMes &&
-    filtroMes.value !== "TODOS"
-  ) {
-
-    nombreArchivo +=
-      "_" +
-      filtroMes.value;
+    alert(
+      "No se pudo generar el Excel:\n" +
+      error.message
+    );
 
   }
-
-
-  nombreArchivo +=
-    ".csv";
-
-
-  enlace.download =
-    nombreArchivo;
-
-
-  document.body.appendChild(
-    enlace
-  );
-
-
-  enlace.click();
-
-
-  document.body.removeChild(
-    enlace
-  );
-
-
-  URL.revokeObjectURL(
-    url
-  );
 
 }
 
@@ -2809,6 +2571,38 @@ function mostrarModuloCaja() {
     </div>
 
   `;
+
+}
+
+
+// ============================================================
+// OBTENER MES ACTUAL
+// ============================================================
+
+function obtenerMesActual() {
+
+  const ahora =
+    new Date();
+
+
+  const year =
+    ahora.getFullYear();
+
+
+  const month =
+    String(
+      ahora.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    );
+
+
+  return (
+    year +
+    "-" +
+    month
+  );
 
 }
 
