@@ -18,10 +18,13 @@ const supabaseClient = window.supabase.createClient(
 // ============================================================
 
 let usuarioActual = null;
+
 let socios = [];
+
 let aportes = [];
 
-let mesAportesSeleccionado = obtenerMesActual();
+let mesAportesSeleccionado =
+  obtenerMesActual();
 
 
 // ============================================================
@@ -57,9 +60,6 @@ const cantidadSocios =
 
 const connectionStatus =
   document.getElementById("connection-status");
-
-const sociosLista =
-  document.getElementById("socios-lista");
 
 const moduloScreen =
   document.getElementById("modulo-screen");
@@ -111,14 +111,17 @@ document.addEventListener(
 
         await mostrarAplicacion();
 
-      } else {
+      }
+
+      else {
 
         mostrarLogin();
 
       }
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
       console.error(
         "Error iniciando aplicación:",
@@ -221,9 +224,11 @@ async function iniciarSesion(event) {
     } =
       await supabaseClient.auth.signInWithPassword({
 
-        email: email,
+        email:
+          email,
 
-        password: password
+        password:
+          password
 
       });
 
@@ -248,8 +253,9 @@ async function iniciarSesion(event) {
 
     await mostrarAplicacion();
 
+  }
 
-  } catch (error) {
+  catch (error) {
 
     console.error(
       "Error en login:",
@@ -319,7 +325,9 @@ async function cerrarSesion() {
 
     await supabaseClient.auth.signOut();
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
       "Error cerrando sesión:",
@@ -352,7 +360,9 @@ async function cargarDatosIniciales() {
 
     await cargarSocios();
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
       "ERROR REAL AL CARGAR SOCIOS:",
@@ -361,7 +371,10 @@ async function cargarDatosIniciales() {
 
     connectionStatus.textContent =
       "Error al cargar socios: " +
-      (error.message || error);
+      (
+        error.message ||
+        error
+      );
 
     return;
 
@@ -372,7 +385,9 @@ async function cargarDatosIniciales() {
 
     await cargarAportes();
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
       "ERROR AL CARGAR APORTES:",
@@ -382,7 +397,10 @@ async function cargarDatosIniciales() {
     connectionStatus.textContent =
       "Socios cargados correctamente. " +
       "Error al cargar aportes: " +
-      (error.message || error);
+      (
+        error.message ||
+        error
+      );
 
     return;
 
@@ -416,22 +434,15 @@ async function cargarSocios() {
       );
 
 
-  const data =
-    resultado.data;
+  if (resultado.error) {
 
-  const error =
-    resultado.error;
-
-
-  if (error) {
-
-    throw error;
+    throw resultado.error;
 
   }
 
 
   socios =
-    data || [];
+    resultado.data || [];
 
 
   const activos =
@@ -450,121 +461,6 @@ async function cargarSocios() {
       activos.length;
 
   }
-
-
-  mostrarSociosInicio(
-    activos
-  );
-
-}
-
-
-// ============================================================
-// MOSTRAR SOCIOS EN INICIO
-// ============================================================
-
-function mostrarSociosInicio(lista) {
-
-  if (!sociosLista) {
-
-    return;
-
-  }
-
-
-  if (!lista.length) {
-
-    sociosLista.innerHTML =
-      "<p>No hay socios registrados.</p>";
-
-    return;
-
-  }
-
-
-  let html = `
-
-    <div class="tabla-contenedor">
-
-      <table>
-
-        <thead>
-
-          <tr>
-
-            <th>Nombre</th>
-            <th>Correo</th>
-            <th>Rol</th>
-            <th>Estado</th>
-
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-  `;
-
-
-  lista.forEach(
-    function (socio) {
-
-      html += `
-
-        <tr>
-
-          <td>
-            ${escapeHtml(
-              socio.nombre ||
-              "Sin nombre"
-            )}
-          </td>
-
-          <td>
-            ${
-              socio.email
-                ? escapeHtml(
-                    socio.email
-                  )
-                : "Sin correo"
-            }
-          </td>
-
-          <td>
-            ${escapeHtml(
-              socio.rol ||
-              "SOCIO"
-            )}
-          </td>
-
-          <td>
-            ${escapeHtml(
-              socio.estado ||
-              ""
-            )}
-          </td>
-
-        </tr>
-
-      `;
-
-    }
-  );
-
-
-  html += `
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-  `;
-
-
-  sociosLista.innerHTML =
-    html;
 
 }
 
@@ -597,22 +493,15 @@ async function cargarAportes() {
       );
 
 
-  const data =
-    resultado.data;
+  if (resultado.error) {
 
-  const error =
-    resultado.error;
-
-
-  if (error) {
-
-    throw error;
+    throw resultado.error;
 
   }
 
 
   aportes =
-    data || [];
+    resultado.data || [];
 
 }
 
@@ -621,7 +510,9 @@ async function cargarAportes() {
 // ABRIR MÓDULO
 // ============================================================
 
-async function abrirModulo(modulo) {
+async function abrirModulo(
+  modulo
+) {
 
   moduloScreen.classList.remove(
     "hidden"
@@ -677,7 +568,9 @@ async function abrirModulo(modulo) {
 
     }
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
       "Error abriendo módulo:",
@@ -793,56 +686,50 @@ function mostrarModuloSocios() {
 
           <tbody>
 
-  `;
+            ${activos.map(
+              function (socio) {
 
+                return `
 
-  activos.forEach(
-    function (socio) {
+                  <tr>
 
-      html += `
+                    <td>
+                      ${escapeHtml(
+                        socio.nombre ||
+                        "Sin nombre"
+                      )}
+                    </td>
 
-        <tr>
+                    <td>
+                      ${
+                        socio.email
+                          ? escapeHtml(
+                              socio.email
+                            )
+                          : "Sin correo"
+                      }
+                    </td>
 
-          <td>
-            ${escapeHtml(
-              socio.nombre ||
-              "Sin nombre"
-            )}
-          </td>
+                    <td>
+                      ${escapeHtml(
+                        socio.rol ||
+                        "SOCIO"
+                      )}
+                    </td>
 
-          <td>
-            ${
-              socio.email
-                ? escapeHtml(
-                    socio.email
-                  )
-                : "Sin correo"
-            }
-          </td>
+                    <td>
+                      ${escapeHtml(
+                        socio.estado ||
+                        ""
+                      )}
+                    </td>
 
-          <td>
-            ${escapeHtml(
-              socio.rol ||
-              "SOCIO"
-            )}
-          </td>
+                  </tr>
 
-          <td>
-            ${escapeHtml(
-              socio.estado ||
-              ""
-            )}
-          </td>
+                `;
 
-        </tr>
-
-      `;
-
-    }
-  );
-
-
-  html += `
+              }
+            ).join("")}
 
           </tbody>
 
@@ -970,6 +857,10 @@ function mostrarModuloAportes() {
     </div>
 
 
+    <!-- =====================================================
+         REGISTRAR PAGO
+         ===================================================== -->
+
     <div class="panel">
 
       <h3>
@@ -1001,7 +892,9 @@ function mostrarModuloAportes() {
               .filter(
                 function (s) {
 
-                  return s.estado === "ACTIVO";
+                  return (
+                    s.estado === "ACTIVO"
+                  );
 
                 }
               )
@@ -1102,6 +995,10 @@ function mostrarModuloAportes() {
     </div>
 
 
+    <!-- =====================================================
+         REGISTRO DE APORTES
+         ===================================================== -->
+
     <div class="panel">
 
       <div class="registro-header">
@@ -1136,13 +1033,26 @@ function mostrarModuloAportes() {
           </div>
 
 
-          <button
-            id="btn-exportar-excel"
-            class="secondary"
-            type="button"
-          >
-            📊 Exportar Excel
-          </button>
+          <div class="botones-exportacion">
+
+            <button
+              id="btn-exportar-excel"
+              class="secondary"
+              type="button"
+            >
+              📊 Exportar mes
+            </button>
+
+
+            <button
+              id="btn-exportar-anual"
+              class="primary"
+              type="button"
+            >
+              📅 Exportar año
+            </button>
+
+          </div>
 
         </div>
 
@@ -1191,6 +1101,12 @@ function configurarFiltroMes() {
     );
 
 
+  const botonAnual =
+    document.getElementById(
+      "btn-exportar-anual"
+    );
+
+
   if (filtro) {
 
     filtro.addEventListener(
@@ -1215,6 +1131,16 @@ function configurarFiltroMes() {
     botonExcel.addEventListener(
       "click",
       exportarAportesExcel
+    );
+
+  }
+
+
+  if (botonAnual) {
+
+    botonAnual.addEventListener(
+      "click",
+      exportarAportesAnual
     );
 
   }
@@ -1312,7 +1238,10 @@ function obtenerAportesDelMes() {
 
 
       return (
-        aporte.fecha_vencimiento.substring(0, 7) ===
+        aporte.fecha_vencimiento.substring(
+          0,
+          7
+        ) ===
         mesAportesSeleccionado
       );
 
@@ -1521,7 +1450,9 @@ function generarTablaAportesMes() {
 // RESUMEN APORTES
 // ============================================================
 
-function calcularResumenAportes(lista) {
+function calcularResumenAportes(
+  lista
+) {
 
   let pagados = 0;
 
@@ -1549,21 +1480,24 @@ function calcularResumenAportes(lista) {
         );
 
 
-      if (aporte.estado === "PAGADO") {
+      if (
+        aporte.estado ===
+        "PAGADO"
+      ) {
 
         pagados++;
 
       }
 
       else if (
-        aporte.estado === "ATRASADO"
+        aporte.estado ===
+        "ATRASADO"
       ) {
 
         atrasados++;
 
         pendiente +=
-          valor +
-          multa;
+          valor + multa;
 
       }
 
@@ -1572,8 +1506,7 @@ function calcularResumenAportes(lista) {
         pendientes++;
 
         pendiente +=
-          valor +
-          multa;
+          valor + multa;
 
       }
 
@@ -1622,7 +1555,10 @@ async function editarAporte(
     aportes.find(
       function (a) {
 
-        return a.id === aporteId;
+        return (
+          a.id ===
+          aporteId
+        );
 
       }
     );
@@ -1660,7 +1596,8 @@ async function editarAporte(
   const estado =
     prompt(
       "Estado: PAGADO, PENDIENTE o ATRASADO",
-      aporte.estado || "PAGADO"
+      aporte.estado ||
+      "PAGADO"
     );
 
 
@@ -1699,7 +1636,8 @@ async function editarAporte(
 
   if (
     fechaPago &&
-    estado.toUpperCase() === "PAGADO"
+    estado.toUpperCase() ===
+    "PAGADO"
   ) {
 
     const calculo =
@@ -1732,7 +1670,8 @@ async function editarAporte(
         .update({
 
           fecha_pago:
-            fechaPago || null,
+            fechaPago ||
+            null,
 
           estado:
             estado.toUpperCase(),
@@ -1744,7 +1683,8 @@ async function editarAporte(
             total,
 
           observacion:
-            observacion || null
+            observacion ||
+            null
 
         })
         .eq(
@@ -1764,8 +1704,9 @@ async function editarAporte(
 
     mostrarModuloAportes();
 
+  }
 
-  } catch (error) {
+  catch (error) {
 
     console.error(
       "Error editando aporte:",
@@ -1794,30 +1735,25 @@ function configurarFormularioPago() {
       "pago-socio"
     );
 
-
   const aporteSelect =
     document.getElementById(
       "pago-aporte"
     );
-
 
   const fechaInput =
     document.getElementById(
       "pago-fecha"
     );
 
-
   const calcularDiv =
     document.getElementById(
       "calculo-pago"
     );
 
-
   const boton =
     document.getElementById(
       "btn-registrar-pago"
     );
-
 
   const mensaje =
     document.getElementById(
@@ -1881,7 +1817,10 @@ function configurarFormularioPago() {
       aportes.find(
         function (a) {
 
-          return a.id === aporteId;
+          return (
+            a.id ===
+            aporteId
+          );
 
         }
       );
@@ -2022,7 +1961,10 @@ function configurarFormularioPago() {
         aportes.find(
           function (a) {
 
-            return a.id === aporteId;
+            return (
+              a.id ===
+              aporteId
+            );
 
           }
         );
@@ -2103,8 +2045,9 @@ function configurarFormularioPago() {
 
         mostrarModuloAportes();
 
+      }
 
-      } catch (error) {
+      catch (error) {
 
         console.error(
           "Error registrando pago:",
@@ -2161,8 +2104,10 @@ function cargarAportesSocio(
       function (aporte) {
 
         return (
-          aporte.socio_id === socioId &&
-          aporte.estado !== "PAGADO"
+          aporte.socio_id ===
+          socioId &&
+          aporte.estado !==
+          "PAGADO"
         );
 
       }
@@ -2206,6 +2151,7 @@ function cargarAportesSocio(
                 )}
 
                 -
+
                 $
 
                 ${Number(
@@ -2270,25 +2216,33 @@ function calcularMulta(
   let multa = 0;
 
 
-  if (diasAtraso <= 0) {
+  if (
+    diasAtraso <= 0
+  ) {
 
     multa = 0;
 
   }
 
-  else if (diasAtraso <= 7) {
+  else if (
+    diasAtraso <= 7
+  ) {
 
     multa = 4;
 
   }
 
-  else if (diasAtraso <= 14) {
+  else if (
+    diasAtraso <= 14
+  ) {
 
     multa = 5;
 
   }
 
-  else if (diasAtraso <= 21) {
+  else if (
+    diasAtraso <= 21
+  ) {
 
     multa = 6;
 
@@ -2315,31 +2269,20 @@ function calcularMulta(
 
 
 // ============================================================
-// EXPORTAR APORTES A EXCEL
-// ============================================================
-// IMPORTANTE:
-// Antes de crear el Excel se vuelven a cargar los datos
-// directamente desde Supabase.
-//
-// Esto garantiza que la observación recién guardada,
-// así como cualquier otro cambio, aparezca en el Excel.
+// EXPORTAR APORTES DEL MES
 // ============================================================
 
 async function exportarAportesExcel() {
 
   try {
 
-    // --------------------------------------------------------
-    // VERIFICAR XLSX
-    // --------------------------------------------------------
-
     if (
-      typeof XLSX === "undefined"
+      typeof XLSX ===
+      "undefined"
     ) {
 
       alert(
-        "La librería de Excel no está cargada.\n\n" +
-        "Verifica que el HTML tenga incluida la librería XLSX."
+        "La librería de Excel no está cargada."
       );
 
       return;
@@ -2347,57 +2290,10 @@ async function exportarAportesExcel() {
     }
 
 
-    // --------------------------------------------------------
-    // RECARGAR APORTES DESDE SUPABASE
-    // --------------------------------------------------------
-
-    const resultado =
-      await supabaseClient
-        .from("aportes")
-        .select(`
-          id,
-          socio_id,
-          fecha_vencimiento,
-          valor_aporte,
-          fecha_pago,
-          estado,
-          multa,
-          total_pagado,
-          observacion
-        `)
-        .order(
-          "fecha_vencimiento",
-          {
-            ascending: true
-          }
-        );
-
-
-    if (resultado.error) {
-
-      throw resultado.error;
-
-    }
-
-
-    // Actualizar variable global
-
-    aportes =
-      resultado.data || [];
-
-
-    // --------------------------------------------------------
-    // MES A EXPORTAR
-    // --------------------------------------------------------
-
     const mes =
       mesAportesSeleccionado ||
       obtenerMesActual();
 
-
-    // --------------------------------------------------------
-    // FILTRAR APORTES DEL MES
-    // --------------------------------------------------------
 
     const aportesMes =
       aportes.filter(
@@ -2405,30 +2301,29 @@ async function exportarAportesExcel() {
 
           return (
             aporte.fecha_vencimiento &&
-            aporte.fecha_vencimiento.substring(0, 7) === mes
+            aporte.fecha_vencimiento.substring(
+              0,
+              7
+            ) ===
+            mes
           );
 
         }
       );
 
 
-    // --------------------------------------------------------
-    // CREAR FILAS
-    // --------------------------------------------------------
-
     const filas = [];
 
-
-    // --------------------------------------------------------
-    // SOCIOS ACTIVOS
-    // --------------------------------------------------------
 
     const sociosActivos =
       socios
         .filter(
           function (socio) {
 
-            return socio.estado === "ACTIVO";
+            return (
+              socio.estado ===
+              "ACTIVO"
+            );
 
           }
         )
@@ -2443,10 +2338,6 @@ async function exportarAportesExcel() {
         );
 
 
-    // --------------------------------------------------------
-    // RECORRER TODOS LOS SOCIOS
-    // --------------------------------------------------------
-
     sociosActivos.forEach(
       function (socio) {
 
@@ -2455,16 +2346,13 @@ async function exportarAportesExcel() {
             function (aporte) {
 
               return (
-                aporte.socio_id === socio.id
+                aporte.socio_id ===
+                socio.id
               );
 
             }
           );
 
-
-        // ----------------------------------------------------
-        // SOCIO SIN REGISTRO
-        // ----------------------------------------------------
 
         if (!registros.length) {
 
@@ -2501,10 +2389,6 @@ async function exportarAportesExcel() {
         }
 
 
-        // ----------------------------------------------------
-        // SOCIO CON REGISTRO
-        // ----------------------------------------------------
-
         registros.forEach(
           function (aporte) {
 
@@ -2514,11 +2398,9 @@ async function exportarAportesExcel() {
                 socio.nombre || "",
 
               "Vencimiento":
-                aporte.fecha_vencimiento
-                  ? formatearFecha(
-                      aporte.fecha_vencimiento
-                    )
-                  : "",
+                formatearFecha(
+                  aporte.fecha_vencimiento
+                ),
 
               "Aporte":
                 Number(
@@ -2545,13 +2427,6 @@ async function exportarAportesExcel() {
               "Estado":
                 aporte.estado || "",
 
-              // =================================================
-              // OBSERVACIÓN
-              // =================================================
-              // Se toma directamente del registro recién
-              // consultado en Supabase.
-              // =================================================
-
               "Observación":
                 aporte.observacion || ""
 
@@ -2564,85 +2439,17 @@ async function exportarAportesExcel() {
     );
 
 
-    // --------------------------------------------------------
-    // CREAR HOJA
-    // --------------------------------------------------------
-
-    const worksheet =
-      XLSX.utils.json_to_sheet(
-        filas
-      );
-
-
-    // --------------------------------------------------------
-    // ANCHOS DE COLUMNAS
-    // --------------------------------------------------------
-
-    worksheet["!cols"] = [
-
-      {
-        wch: 20
-      },
-
-      {
-        wch: 15
-      },
-
-      {
-        wch: 12
-      },
-
-      {
-        wch: 12
-      },
-
-      {
-        wch: 15
-      },
-
-      {
-        wch: 15
-      },
-
-      {
-        wch: 16
-      },
-
-      {
-        wch: 40
-      }
-
-    ];
-
-
-    // --------------------------------------------------------
-    // CREAR LIBRO
-    // --------------------------------------------------------
-
-    const workbook =
-      XLSX.utils.book_new();
-
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "Aportes"
-    );
-
-
-    // --------------------------------------------------------
-    // GENERAR ARCHIVO
-    // --------------------------------------------------------
-
-    XLSX.writeFile(
-      workbook,
+    crearYDescargarExcel(
+      filas,
+      "Aportes",
       "The_Cow_Money_Aportes_" +
       mes +
       ".xlsx"
     );
 
+  }
 
-  } catch (error) {
+  catch (error) {
 
     console.error(
       "Error exportando Excel:",
@@ -2651,11 +2458,435 @@ async function exportarAportesExcel() {
 
 
     alert(
-      "No se pudo generar el Excel:\n\n" +
+      "No se pudo generar el Excel:\n" +
       error.message
     );
 
   }
+
+}
+
+
+// ============================================================
+// NUEVO: EXPORTAR APORTES DEL AÑO COMPLETO
+// ============================================================
+
+async function exportarAportesAnual() {
+
+  try {
+
+    if (
+      typeof XLSX ===
+      "undefined"
+    ) {
+
+      alert(
+        "La librería de Excel no está cargada."
+      );
+
+      return;
+
+    }
+
+
+    const año =
+      obtenerAñoSeleccionado();
+
+
+    /*
+     * Tomamos todos los aportes cuyo
+     * vencimiento pertenece al año.
+     */
+
+    const aportesAño =
+      aportes.filter(
+        function (aporte) {
+
+          return (
+            aporte.fecha_vencimiento &&
+            aporte.fecha_vencimiento.substring(
+              0,
+              4
+            ) ===
+            año
+          );
+
+        }
+      );
+
+
+    const filas = [];
+
+
+    const sociosActivos =
+      socios
+        .filter(
+          function (socio) {
+
+            return (
+              socio.estado ===
+              "ACTIVO"
+            );
+
+          }
+        )
+        .sort(
+          function (a, b) {
+
+            return a.nombre.localeCompare(
+              b.nombre
+            );
+
+          }
+        );
+
+
+    /*
+     * Recorremos los 12 meses.
+     * Esto permite que el Excel tenga
+     * todos los meses, incluso cuando
+     * algún socio no tiene registro.
+     */
+
+    for (
+      let numeroMes = 1;
+      numeroMes <= 12;
+      numeroMes++
+    ) {
+
+      const mes =
+        String(
+          numeroMes
+        ).padStart(
+          2,
+          "0"
+        );
+
+
+      const codigoMes =
+        año +
+        "-" +
+        mes;
+
+
+      const nombreMes =
+        obtenerNombreMes(
+          numeroMes
+        );
+
+
+      sociosActivos.forEach(
+        function (socio) {
+
+          const registros =
+            aportesAño.filter(
+              function (aporte) {
+
+                return (
+                  aporte.socio_id ===
+                    socio.id &&
+                  aporte.fecha_vencimiento.substring(
+                    0,
+                    7
+                  ) ===
+                    codigoMes
+                );
+
+              }
+            );
+
+
+          /*
+           * Si no existe registro
+           * para ese socio en ese mes,
+           * igualmente lo mostramos.
+           */
+
+          if (!registros.length) {
+
+            filas.push({
+
+              "Mes":
+                nombreMes,
+
+              "Socio":
+                socio.nombre || "",
+
+              "Vencimiento":
+                "",
+
+              "Aporte":
+                0,
+
+              "Multa":
+                0,
+
+              "Total Pagado":
+                0,
+
+              "Fecha Pago":
+                "",
+
+              "Estado":
+                "SIN REGISTRO",
+
+              "Observación":
+                ""
+
+            });
+
+            return;
+
+          }
+
+
+          registros.forEach(
+            function (aporte) {
+
+              filas.push({
+
+                "Mes":
+                  nombreMes,
+
+                "Socio":
+                  socio.nombre || "",
+
+                "Vencimiento":
+                  formatearFecha(
+                    aporte.fecha_vencimiento
+                  ),
+
+                "Aporte":
+                  Number(
+                    aporte.valor_aporte ||
+                    0
+                  ),
+
+                "Multa":
+                  Number(
+                    aporte.multa ||
+                    0
+                  ),
+
+                "Total Pagado":
+                  Number(
+                    aporte.total_pagado ||
+                    0
+                  ),
+
+                "Fecha Pago":
+                  aporte.fecha_pago
+                    ? formatearFecha(
+                        aporte.fecha_pago
+                      )
+                    : "",
+
+                "Estado":
+                  aporte.estado ||
+                  "",
+
+                "Observación":
+                  aporte.observacion ||
+                  ""
+
+              });
+
+            }
+          );
+
+        }
+      );
+
+    }
+
+
+    crearYDescargarExcel(
+      filas,
+      "Aportes " + año,
+      "The_Cow_Money_Aportes_" +
+      año +
+      "_Completo.xlsx"
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Error exportando año completo:",
+      error
+    );
+
+
+    alert(
+      "No se pudo generar el Excel anual:\n" +
+      error.message
+    );
+
+  }
+
+}
+
+
+// ============================================================
+// CREAR Y DESCARGAR EXCEL
+// ============================================================
+
+function crearYDescargarExcel(
+  filas,
+  nombreHoja,
+  nombreArchivo
+) {
+
+  if (!filas.length) {
+
+    alert(
+      "No hay información para exportar."
+    );
+
+    return;
+
+  }
+
+
+  const worksheet =
+    XLSX.utils.json_to_sheet(
+      filas
+    );
+
+
+  worksheet["!cols"] = [
+
+    {
+      wch: 15
+    },
+
+    {
+      wch: 20
+    },
+
+    {
+      wch: 15
+    },
+
+    {
+      wch: 12
+    },
+
+    {
+      wch: 12
+    },
+
+    {
+      wch: 15
+    },
+
+    {
+      wch: 15
+    },
+
+    {
+      wch: 18
+    },
+
+    {
+      wch: 35
+    }
+
+  ];
+
+
+  const workbook =
+    XLSX.utils.book_new();
+
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    nombreHoja.substring(
+      0,
+      31
+    )
+  );
+
+
+  XLSX.writeFile(
+    workbook,
+    nombreArchivo
+  );
+
+}
+
+
+// ============================================================
+// OBTENER AÑO SELECCIONADO
+// ============================================================
+
+function obtenerAñoSeleccionado() {
+
+  if (
+    mesAportesSeleccionado &&
+    mesAportesSeleccionado.length >= 4
+  ) {
+
+    return mesAportesSeleccionado.substring(
+      0,
+      4
+    );
+
+  }
+
+
+  return String(
+    new Date().getFullYear()
+  );
+
+}
+
+
+// ============================================================
+// OBTENER NOMBRE DEL MES
+// ============================================================
+
+function obtenerNombreMes(
+  numeroMes
+) {
+
+  const meses = [
+
+    "Enero",
+
+    "Febrero",
+
+    "Marzo",
+
+    "Abril",
+
+    "Mayo",
+
+    "Junio",
+
+    "Julio",
+
+    "Agosto",
+
+    "Septiembre",
+
+    "Octubre",
+
+    "Noviembre",
+
+    "Diciembre"
+
+  ];
+
+
+  return (
+    meses[
+      numeroMes - 1
+    ] ||
+    ""
+  );
 
 }
 
@@ -2821,13 +3052,6 @@ function convertirFechaUTC(
   fecha
 ) {
 
-  if (!fecha) {
-
-    return new Date(NaN);
-
-  }
-
-
   const partes =
     fecha.split("-");
 
@@ -2835,11 +3059,17 @@ function convertirFechaUTC(
   return new Date(
     Date.UTC(
 
-      Number(partes[0]),
+      Number(
+        partes[0]
+      ),
 
-      Number(partes[1]) - 1,
+      Number(
+        partes[1]
+      ) - 1,
 
-      Number(partes[2])
+      Number(
+        partes[2]
+      )
 
     )
   );
