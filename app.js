@@ -28,18 +28,29 @@ let mesAportesSeleccionado = obtenerMesActual();
 // ELEMENTOS
 // ============================================================
 
-const loginScreen = document.getElementById("login-screen");
-const mainScreen = document.getElementById("main-screen");
+const loginScreen =
+  document.getElementById("login-screen");
 
-const loginForm = document.getElementById("login-form");
-const loginMessage = document.getElementById("login-message");
+const mainScreen =
+  document.getElementById("main-screen");
 
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
+const loginForm =
+  document.getElementById("login-form");
 
-const logoutButton = document.getElementById("logout");
+const loginMessage =
+  document.getElementById("login-message");
 
-const userName = document.getElementById("user-name");
+const emailInput =
+  document.getElementById("email");
+
+const passwordInput =
+  document.getElementById("password");
+
+const logoutButton =
+  document.getElementById("logout");
+
+const userName =
+  document.getElementById("user-name");
 
 const cantidadSocios =
   document.getElementById("cantidad-socios");
@@ -64,54 +75,66 @@ const volverPanel =
 // INICIAR APLICACIÓN
 // ============================================================
 
-document.addEventListener("DOMContentLoaded", async function () {
+document.addEventListener(
+  "DOMContentLoaded",
+  async function () {
 
-  configurarEventos();
+    configurarEventos();
 
-  try {
+    try {
 
-    const {
-      data,
-      error
-    } = await supabaseClient.auth.getSession();
+      const {
+        data,
+        error
+      } =
+        await supabaseClient.auth.getSession();
 
-    if (error) {
+
+      if (error) {
+
+        console.error(
+          "Error obteniendo sesión:",
+          error
+        );
+
+        mostrarLogin();
+
+        return;
+
+      }
+
+
+      if (data.session) {
+
+        usuarioActual =
+          data.session.user;
+
+        await mostrarAplicacion();
+
+      }
+
+      else {
+
+        mostrarLogin();
+
+      }
+
+
+    }
+
+    catch (error) {
 
       console.error(
-        "Error obteniendo sesión:",
+        "Error iniciando aplicación:",
         error
       );
 
       mostrarLogin();
 
-      return;
     }
-
-    if (data.session) {
-
-      usuarioActual =
-        data.session.user;
-
-      await mostrarAplicacion();
-
-    } else {
-
-      mostrarLogin();
-
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Error iniciando aplicación:",
-      error
-    );
-
-    mostrarLogin();
 
   }
-
-});
+);
 
 
 // ============================================================
@@ -142,23 +165,25 @@ function configurarEventos() {
 
   document
     .querySelectorAll(".menu-card")
-    .forEach(function (boton) {
+    .forEach(
+      function (boton) {
 
-      boton.addEventListener(
-        "click",
-        function () {
+        boton.addEventListener(
+          "click",
+          function () {
 
-          const modulo =
-            boton.getAttribute(
-              "data-modulo"
-            );
+            const modulo =
+              boton.getAttribute(
+                "data-modulo"
+              );
 
-          abrirModulo(modulo);
+            abrirModulo(modulo);
 
-        }
-      );
+          }
+        );
 
-    });
+      }
+    );
 
 
   if (volverPanel) {
@@ -210,7 +235,8 @@ async function iniciarSesion(event) {
     if (error) {
 
       loginMessage.textContent =
-        "Error: " + error.message;
+        "Error: " +
+        error.message;
 
       return;
 
@@ -220,13 +246,15 @@ async function iniciarSesion(event) {
     usuarioActual =
       data.user;
 
-    loginMessage.textContent = "";
+    loginMessage.textContent =
+      "";
 
 
     await mostrarAplicacion();
 
+  }
 
-  } catch (error) {
+  catch (error) {
 
     console.error(
       "Error en login:",
@@ -247,9 +275,13 @@ async function iniciarSesion(event) {
 
 async function mostrarAplicacion() {
 
-  loginScreen.classList.add("hidden");
+  loginScreen.classList.add(
+    "hidden"
+  );
 
-  mainScreen.classList.remove("hidden");
+  mainScreen.classList.remove(
+    "hidden"
+  );
 
 
   if (usuarioActual) {
@@ -292,7 +324,9 @@ async function cerrarSesion() {
 
     await supabaseClient.auth.signOut();
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
       "Error cerrando sesión:",
@@ -300,6 +334,7 @@ async function cerrarSesion() {
     );
 
   }
+
 
   usuarioActual = null;
 
@@ -322,7 +357,9 @@ async function cargarDatosIniciales() {
 
     await cargarSocios();
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
       "ERROR REAL AL CARGAR SOCIOS:",
@@ -331,7 +368,10 @@ async function cargarDatosIniciales() {
 
     connectionStatus.textContent =
       "Error al cargar socios: " +
-      (error.message || error);
+      (
+        error.message ||
+        error
+      );
 
     return;
 
@@ -342,7 +382,9 @@ async function cargarDatosIniciales() {
 
     await cargarAportes();
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
       "ERROR AL CARGAR APORTES:",
@@ -352,7 +394,10 @@ async function cargarDatosIniciales() {
     connectionStatus.textContent =
       "Socios cargados correctamente. " +
       "Error al cargar aportes: " +
-      (error.message || error);
+      (
+        error.message ||
+        error
+      );
 
     return;
 
@@ -405,11 +450,13 @@ async function cargarSocios() {
 
 
   const activos =
-    socios.filter(function (socio) {
+    socios.filter(
+      function (socio) {
 
-      return socio.estado === "ACTIVO";
+        return socio.estado === "ACTIVO";
 
-    });
+      }
+    );
 
 
   if (cantidadSocios) {
@@ -474,48 +521,50 @@ function mostrarSociosInicio(lista) {
   `;
 
 
-  lista.forEach(function (socio) {
+  lista.forEach(
+    function (socio) {
 
-    html += `
+      html += `
 
-      <tr>
+        <tr>
 
-        <td>
-          ${escapeHtml(
-            socio.nombre ||
-            "Sin nombre"
-          )}
-        </td>
+          <td>
+            ${escapeHtml(
+              socio.nombre ||
+              "Sin nombre"
+            )}
+          </td>
 
-        <td>
-          ${
-            socio.email
-              ? escapeHtml(
-                  socio.email
-                )
-              : "Sin correo"
-          }
-        </td>
+          <td>
+            ${
+              socio.email
+                ? escapeHtml(
+                    socio.email
+                  )
+                : "Sin correo"
+            }
+          </td>
 
-        <td>
-          ${escapeHtml(
-            socio.rol ||
-            "SOCIO"
-          )}
-        </td>
+          <td>
+            ${escapeHtml(
+              socio.rol ||
+              "SOCIO"
+            )}
+          </td>
 
-        <td>
-          ${escapeHtml(
-            socio.estado ||
-            ""
-          )}
-        </td>
+          <td>
+            ${escapeHtml(
+              socio.estado ||
+              ""
+            )}
+          </td>
 
-      </tr>
+        </tr>
 
-    `;
+      `;
 
-  });
+    }
+  );
 
 
   html += `
@@ -643,7 +692,9 @@ async function abrirModulo(modulo) {
 
     }
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
       "Error abriendo módulo:",
@@ -698,11 +749,13 @@ function volverAlPanel() {
 function mostrarModuloSocios() {
 
   const activos =
-    socios.filter(function (socio) {
+    socios.filter(
+      function (socio) {
 
-      return socio.estado === "ACTIVO";
+        return socio.estado === "ACTIVO";
 
-    });
+      }
+    );
 
 
   let html = `
@@ -760,48 +813,50 @@ function mostrarModuloSocios() {
   `;
 
 
-  activos.forEach(function (socio) {
+  activos.forEach(
+    function (socio) {
 
-    html += `
+      html += `
 
-      <tr>
+        <tr>
 
-        <td>
-          ${escapeHtml(
-            socio.nombre ||
-            "Sin nombre"
-          )}
-        </td>
+          <td>
+            ${escapeHtml(
+              socio.nombre ||
+              "Sin nombre"
+            )}
+          </td>
 
-        <td>
-          ${
-            socio.email
-              ? escapeHtml(
-                  socio.email
-                )
-              : "Sin correo"
-          }
-        </td>
+          <td>
+            ${
+              socio.email
+                ? escapeHtml(
+                    socio.email
+                  )
+                : "Sin correo"
+            }
+          </td>
 
-        <td>
-          ${escapeHtml(
-            socio.rol ||
-            "SOCIO"
-          )}
-        </td>
+          <td>
+            ${escapeHtml(
+              socio.rol ||
+              "SOCIO"
+            )}
+          </td>
 
-        <td>
-          ${escapeHtml(
-            socio.estado ||
-            ""
-          )}
-        </td>
+          <td>
+            ${escapeHtml(
+              socio.estado ||
+              ""
+            )}
+          </td>
 
-      </tr>
+        </tr>
 
-    `;
+      `;
 
-  });
+    }
+  );
 
 
   html += `
@@ -960,29 +1015,39 @@ function mostrarModuloAportes() {
             </option>
 
             ${socios
-              .filter(function (s) {
-                return s.estado === "ACTIVO";
-              })
-              .sort(function (a, b) {
-                return a.nombre.localeCompare(
-                  b.nombre
-                );
-              })
-              .map(function (s) {
+              .filter(
+                function (s) {
 
-                return `
+                  return s.estado === "ACTIVO";
 
-                  <option
-                    value="${s.id}"
-                  >
-                    ${escapeHtml(
-                      s.nombre
-                    )}
-                  </option>
+                }
+              )
+              .sort(
+                function (a, b) {
 
-                `;
+                  return a.nombre.localeCompare(
+                    b.nombre
+                  );
 
-              })
+                }
+              )
+              .map(
+                function (s) {
+
+                  return `
+
+                    <option
+                      value="${s.id}"
+                    >
+                      ${escapeHtml(
+                        s.nombre
+                      )}
+                    </option>
+
+                  `;
+
+                }
+              )
               .join("")}
 
           </select>
@@ -1264,8 +1329,10 @@ function obtenerAportesDelMes() {
 
 
       return (
-        aporte.fecha_vencimiento
-          .substring(0, 7) ===
+        aporte.fecha_vencimiento.substring(
+          0,
+          7
+        ) ===
         mesAportesSeleccionado
       );
 
@@ -1361,98 +1428,107 @@ function generarTablaAportesMes() {
         <tbody>
 
           ${aportesMes
-            .map(function (aporte) {
+            .map(
+              function (aporte) {
 
-              const socio =
-                socios.find(
-                  function (s) {
-                    return (
-                      s.id ===
-                      aporte.socio_id
-                    );
-                  }
-                );
+                const socio =
+                  socios.find(
+                    function (s) {
 
+                      return (
+                        s.id ===
+                        aporte.socio_id
+                      );
 
-              const nombre =
-                socio
-                  ? socio.nombre
-                  : "Socio desconocido";
-
-
-              return `
-
-                <tr>
-
-                  <td>
-                    ${escapeHtml(
-                      nombre
-                    )}
-                  </td>
-
-                  <td>
-                    ${formatearFecha(
-                      aporte.fecha_vencimiento
-                    )}
-                  </td>
-
-                  <td>
-                    $ ${Number(
-                      aporte.valor_aporte || 0
-                    ).toFixed(2)}
-                  </td>
-
-                  <td>
-                    $ ${Number(
-                      aporte.multa || 0
-                    ).toFixed(2)}
-                  </td>
-
-                  <td>
-                    $ ${Number(
-                      aporte.total_pagado || 0
-                    ).toFixed(2)}
-                  </td>
-
-                  <td>
-                    ${
-                      aporte.fecha_pago
-                        ? formatearFecha(
-                            aporte.fecha_pago
-                          )
-                        : "-"
                     }
-                  </td>
+                  );
 
-                  <td>
-                    ${escapeHtml(
-                      aporte.estado || ""
-                    )}
-                  </td>
 
-                  <td>
-                    ${escapeHtml(
-                      aporte.observacion || ""
-                    )}
-                  </td>
+                const nombre =
+                  socio
+                    ? socio.nombre
+                    : "Socio desconocido";
 
-                  <td>
 
-                    <button
-                      type="button"
-                      class="secondary"
-                      onclick="editarAporte('${aporte.id}')"
-                    >
-                      ✏️ Editar
-                    </button>
+                return `
 
-                  </td>
+                  <tr>
 
-                </tr>
+                    <td>
+                      ${escapeHtml(
+                        nombre
+                      )}
+                    </td>
 
-              `;
+                    <td>
+                      ${formatearFecha(
+                        aporte.fecha_vencimiento
+                      )}
+                    </td>
 
-            })
+                    <td>
+                      $ ${Number(
+                        aporte.valor_aporte ||
+                        0
+                      ).toFixed(2)}
+                    </td>
+
+                    <td>
+                      $ ${Number(
+                        aporte.multa ||
+                        0
+                      ).toFixed(2)}
+                    </td>
+
+                    <td>
+                      $ ${Number(
+                        aporte.total_pagado ||
+                        0
+                      ).toFixed(2)}
+                    </td>
+
+                    <td>
+                      ${
+                        aporte.fecha_pago
+                          ? formatearFecha(
+                              aporte.fecha_pago
+                            )
+                          : "-"
+                      }
+                    </td>
+
+                    <td>
+                      ${escapeHtml(
+                        aporte.estado ||
+                        ""
+                      )}
+                    </td>
+
+                    <td>
+                      ${escapeHtml(
+                        aporte.observacion ||
+                        ""
+                      )}
+                    </td>
+
+                    <td>
+
+                      <button
+                        type="button"
+                        class="secondary"
+                        onclick="editarAporte('${aporte.id}')"
+                      >
+                        ✏️ Editar
+                      </button>
+
+                    </td>
+
+                  </tr>
+
+                `;
+
+              }
+            )
             .join("")}
 
         </tbody>
@@ -1483,50 +1559,61 @@ function calcularResumenAportes(lista) {
   let pendiente = 0;
 
 
-  lista.forEach(function (aporte) {
+  lista.forEach(
+    function (aporte) {
 
-    const valor =
-      Number(
-        aporte.valor_aporte || 0
-      );
-
-    const multa =
-      Number(
-        aporte.multa || 0
-      );
+      const valor =
+        Number(
+          aporte.valor_aporte ||
+          0
+        );
 
 
-    if (aporte.estado === "PAGADO") {
+      const multa =
+        Number(
+          aporte.multa ||
+          0
+        );
 
-      pagados++;
+
+      if (
+        aporte.estado ===
+        "PAGADO"
+      ) {
+
+        pagados++;
+
+      }
+
+      else if (
+        aporte.estado ===
+        "ATRASADO"
+      ) {
+
+        atrasados++;
+
+        pendiente +=
+          valor +
+          multa;
+
+      }
+
+      else {
+
+        pendientes++;
+
+        pendiente +=
+          valor +
+          multa;
+
+      }
+
+
+      multas +=
+        multa;
 
     }
-
-    else if (
-      aporte.estado === "ATRASADO"
-    ) {
-
-      atrasados++;
-
-      pendiente +=
-        valor + multa;
-
-    }
-
-    else {
-
-      pendientes++;
-
-      pendiente +=
-        valor + multa;
-
-    }
-
-
-    multas +=
-      multa;
-
-  });
+  );
 
 
   return {
@@ -1565,7 +1652,10 @@ async function editarAporte(
   const aporte =
     aportes.find(
       function (a) {
-        return a.id === aporteId;
+
+        return a.id ===
+          aporteId;
+
       }
     );
 
@@ -1581,16 +1671,9 @@ async function editarAporte(
   }
 
 
-  const socio =
-    socios.find(
-      function (s) {
-        return s.id === aporte.socio_id;
-      }
-    );
-
-
   const fechaPagoActual =
-    aporte.fecha_pago || "";
+    aporte.fecha_pago ||
+    "";
 
 
   const fechaPago =
@@ -1610,7 +1693,8 @@ async function editarAporte(
   const estado =
     prompt(
       "Estado: PAGADO, PENDIENTE o ATRASADO",
-      aporte.estado || "PAGADO"
+      aporte.estado ||
+      "PAGADO"
     );
 
 
@@ -1624,7 +1708,8 @@ async function editarAporte(
   const observacion =
     prompt(
       "Observación:",
-      aporte.observacion || ""
+      aporte.observacion ||
+      ""
     );
 
 
@@ -1637,19 +1722,22 @@ async function editarAporte(
 
   let multa =
     Number(
-      aporte.multa || 0
+      aporte.multa ||
+      0
     );
 
 
   let total =
     Number(
-      aporte.total_pagado || 0
+      aporte.total_pagado ||
+      0
     );
 
 
   if (
     fechaPago &&
-    estado.toUpperCase() === "PAGADO"
+    estado.toUpperCase() ===
+    "PAGADO"
   ) {
 
     const calculo =
@@ -1665,7 +1753,8 @@ async function editarAporte(
 
     total =
       Number(
-        aporte.valor_aporte || 0
+        aporte.valor_aporte ||
+        0
       ) +
       multa;
 
@@ -1682,7 +1771,8 @@ async function editarAporte(
         .update({
 
           fecha_pago:
-            fechaPago || null,
+            fechaPago ||
+            null,
 
           estado:
             estado.toUpperCase(),
@@ -1694,7 +1784,8 @@ async function editarAporte(
             total,
 
           observacion:
-            observacion || null
+            observacion ||
+            null
 
         })
         .eq(
@@ -1714,8 +1805,9 @@ async function editarAporte(
 
     mostrarModuloAportes();
 
+  }
 
-  } catch (error) {
+  catch (error) {
 
     console.error(
       "Error editando aporte:",
@@ -1824,7 +1916,10 @@ function configurarFormularioPago() {
     const aporte =
       aportes.find(
         function (a) {
-          return a.id === aporteId;
+
+          return a.id ===
+            aporteId;
+
         }
       );
 
@@ -1887,7 +1982,8 @@ function configurarFormularioPago() {
       <strong>
         $ ${(
           Number(
-            aporte.valor_aporte || 0
+            aporte.valor_aporte ||
+            0
           ) +
           calculo.multa
         ).toFixed(2)}
@@ -1961,7 +2057,10 @@ function configurarFormularioPago() {
       const aporte =
         aportes.find(
           function (a) {
-            return a.id === aporteId;
+
+            return a.id ===
+              aporteId;
+
           }
         );
 
@@ -1985,7 +2084,8 @@ function configurarFormularioPago() {
 
       const total =
         Number(
-          aporte.valor_aporte || 0
+          aporte.valor_aporte ||
+          0
         ) +
         calculo.multa;
 
@@ -2040,8 +2140,9 @@ function configurarFormularioPago() {
 
         mostrarModuloAportes();
 
+      }
 
-      } catch (error) {
+      catch (error) {
 
         console.error(
           "Error registrando pago:",
@@ -2097,8 +2198,10 @@ function cargarAportesSocio(
       function (aporte) {
 
         return (
-          aporte.socio_id === socioId &&
-          aporte.estado !== "PAGADO"
+          aporte.socio_id ===
+          socioId &&
+          aporte.estado !==
+          "PAGADO"
         );
 
       }
@@ -2128,30 +2231,33 @@ function cargarAportesSocio(
 
     ${
       disponibles
-        .map(function (aporte) {
+        .map(
+          function (aporte) {
 
-          return `
+            return `
 
-            <option
-              value="${aporte.id}"
-            >
+              <option
+                value="${aporte.id}"
+              >
 
-              ${formatearFecha(
-                aporte.fecha_vencimiento
-              )}
+                ${formatearFecha(
+                  aporte.fecha_vencimiento
+                )}
 
-              -
-              $
+                -
+                $
 
-              ${Number(
-                aporte.valor_aporte || 0
-              ).toFixed(2)}
+                ${Number(
+                  aporte.valor_aporte ||
+                  0
+                ).toFixed(2)}
 
-            </option>
+              </option>
 
-          `;
+            `;
 
-        })
+          }
+        )
         .join("")
     }
 
@@ -2252,10 +2358,22 @@ function calcularMulta(
 // EXPORTAR APORTES A EXCEL
 // ============================================================
 //
-// Genera un XLSX real.
-// Incluye TODOS los socios activos.
-// Si un socio no tiene aporte para el mes seleccionado,
-// también aparece en el archivo.
+// IMPORTANTE:
+//
+// Esta función exporta TODOS los aportes disponibles,
+// no solamente el mes seleccionado.
+//
+// El Excel será un XLSX real.
+//
+// Además:
+// - Todos los socios aparecen.
+// - Los aportes quedan separados por columnas.
+// - Se agrega filtro automático.
+// - Se congela la fila de encabezados.
+// - Se agregan formatos de moneda.
+// - Se agregan dos hojas:
+//      1. Aportes
+//      2. Socios
 //
 // ============================================================
 
@@ -2270,7 +2388,7 @@ async function exportarAportesExcel() {
 
       alert(
         "La librería de Excel no está cargada.\n\n" +
-        "Debes agregar SheetJS/XLSX al HTML."
+        "Verifica que el HTML tenga incluida la librería XLSX."
       );
 
       return;
@@ -2278,49 +2396,53 @@ async function exportarAportesExcel() {
     }
 
 
-    const mes =
-      mesAportesSeleccionado ||
-      obtenerMesActual();
+    // ========================================================
+    // ASEGURAR DATOS ACTUALIZADOS
+    // ========================================================
+
+    await cargarSocios();
+
+    await cargarAportes();
 
 
-    const aportesMes =
-      aportes.filter(
-        function (aporte) {
-
-          return (
-            aporte.fecha_vencimiento &&
-            aporte.fecha_vencimiento
-              .substring(0, 7) === mes
-          );
-
-        }
-      );
-
+    // ========================================================
+    // CREAR FILAS DEL EXCEL
+    // ========================================================
 
     const filas = [];
 
 
+    // Todos los socios activos
     const sociosActivos =
       socios
-        .filter(function (socio) {
+        .filter(
+          function (socio) {
 
-          return socio.estado === "ACTIVO";
+            return socio.estado ===
+              "ACTIVO";
 
-        })
-        .sort(function (a, b) {
+          }
+        )
+        .sort(
+          function (a, b) {
 
-          return a.nombre.localeCompare(
-            b.nombre
-          );
+            return a.nombre.localeCompare(
+              b.nombre
+            );
 
-        });
+          }
+        );
 
+
+    // ========================================================
+    // CREAR UNA FILA POR CADA APORTE
+    // ========================================================
 
     sociosActivos.forEach(
       function (socio) {
 
         const registros =
-          aportesMes.filter(
+          aportes.filter(
             function (aporte) {
 
               return (
@@ -2332,12 +2454,17 @@ async function exportarAportesExcel() {
           );
 
 
+        // ----------------------------------------------------
+        // SI EL SOCIO NO TIENE NINGÚN APORTE
+        // ----------------------------------------------------
+
         if (!registros.length) {
 
           filas.push({
 
             "Socio":
-              socio.nombre || "",
+              socio.nombre ||
+              "",
 
             "Vencimiento":
               "",
@@ -2367,32 +2494,42 @@ async function exportarAportesExcel() {
         }
 
 
+        // ----------------------------------------------------
+        // CREAR FILA POR CADA APORTE
+        // ----------------------------------------------------
+
         registros.forEach(
           function (aporte) {
 
             filas.push({
 
               "Socio":
-                socio.nombre || "",
+                socio.nombre ||
+                "",
 
               "Vencimiento":
-                formatearFecha(
-                  aporte.fecha_vencimiento
-                ),
+                aporte.fecha_vencimiento
+                  ? formatearFecha(
+                      aporte.fecha_vencimiento
+                    )
+                  : "",
 
               "Aporte":
                 Number(
-                  aporte.valor_aporte || 0
+                  aporte.valor_aporte ||
+                  0
                 ),
 
               "Multa":
                 Number(
-                  aporte.multa || 0
+                  aporte.multa ||
+                  0
                 ),
 
               "Total Pagado":
                 Number(
-                  aporte.total_pagado || 0
+                  aporte.total_pagado ||
+                  0
                 ),
 
               "Fecha Pago":
@@ -2403,10 +2540,12 @@ async function exportarAportesExcel() {
                   : "",
 
               "Estado":
-                aporte.estado || "",
+                aporte.estado ||
+                "",
 
               "Observación":
-                aporte.observacion || ""
+                aporte.observacion ||
+                ""
 
             });
 
@@ -2417,36 +2556,24 @@ async function exportarAportesExcel() {
     );
 
 
+    // ========================================================
+    // CREAR HOJA APORTES
+    // ========================================================
+
     const worksheet =
       XLSX.utils.json_to_sheet(
         filas
       );
 
 
+    // ========================================================
+    // ANCHOS DE COLUMNAS
+    // ========================================================
+
     worksheet["!cols"] = [
 
       {
-        wch: 20
-      },
-
-      {
-        wch: 15
-      },
-
-      {
-        wch: 12
-      },
-
-      {
-        wch: 12
-      },
-
-      {
-        wch: 15
-      },
-
-      {
-        wch: 15
+        wch: 22
       },
 
       {
@@ -2454,16 +2581,222 @@ async function exportarAportesExcel() {
       },
 
       {
-        wch: 30
+        wch: 13
+      },
+
+      {
+        wch: 13
+      },
+
+      {
+        wch: 16
+      },
+
+      {
+        wch: 16
+      },
+
+      {
+        wch: 18
+      },
+
+      {
+        wch: 35
       }
 
     ];
 
 
+    // ========================================================
+    // FORMATO DE MONEDA
+    // ========================================================
+
+    const rango =
+      XLSX.utils.decode_range(
+        worksheet["!ref"]
+      );
+
+
+    for (
+      let fila = 1;
+      fila <= rango.e.r;
+      fila++
+    ) {
+
+      // Columna C = Aporte
+      const celdaAporte =
+        worksheet[
+          XLSX.utils.encode_cell({
+            r: fila,
+            c: 2
+          })
+        ];
+
+
+      if (celdaAporte) {
+
+        celdaAporte.z =
+          '$#,##0.00';
+
+      }
+
+
+      // Columna D = Multa
+      const celdaMulta =
+        worksheet[
+          XLSX.utils.encode_cell({
+            r: fila,
+            c: 3
+          })
+        ];
+
+
+      if (celdaMulta) {
+
+        celdaMulta.z =
+          '$#,##0.00';
+
+      }
+
+
+      // Columna E = Total Pagado
+      const celdaTotal =
+        worksheet[
+          XLSX.utils.encode_cell({
+            r: fila,
+            c: 4
+          })
+        ];
+
+
+      if (celdaTotal) {
+
+        celdaTotal.z =
+          '$#,##0.00';
+
+      }
+
+    }
+
+
+    // ========================================================
+    // ACTIVAR FILTRO EN EXCEL
+    // ========================================================
+
+    if (worksheet["!ref"]) {
+
+      worksheet["!autofilter"] = {
+
+        ref:
+          worksheet["!ref"]
+
+      };
+
+    }
+
+
+    // ========================================================
+    // CONGELAR ENCABEZADOS
+    // ========================================================
+
+    worksheet["!freeze"] = {
+
+      xSplit: 0,
+
+      ySplit: 1
+
+    };
+
+
+    // ========================================================
+    // CREAR HOJA DE SOCIOS
+    // ========================================================
+
+    const filasSocios =
+      sociosActivos.map(
+        function (socio) {
+
+          return {
+
+            "Socio":
+              socio.nombre ||
+              "",
+
+            "Correo":
+              socio.email ||
+              "",
+
+            "Rol":
+              socio.rol ||
+              "SOCIO",
+
+            "Estado":
+              socio.estado ||
+              ""
+
+          };
+
+        }
+      );
+
+
+    const worksheetSocios =
+      XLSX.utils.json_to_sheet(
+        filasSocios
+      );
+
+
+    worksheetSocios["!cols"] = [
+
+      {
+        wch: 25
+      },
+
+      {
+        wch: 35
+      },
+
+      {
+        wch: 15
+      },
+
+      {
+        wch: 15
+      }
+
+    ];
+
+
+    if (worksheetSocios["!ref"]) {
+
+      worksheetSocios["!autofilter"] = {
+
+        ref:
+          worksheetSocios["!ref"]
+
+      };
+
+    }
+
+
+    worksheetSocios["!freeze"] = {
+
+      xSplit: 0,
+
+      ySplit: 1
+
+    };
+
+
+    // ========================================================
+    // CREAR LIBRO EXCEL
+    // ========================================================
+
     const workbook =
       XLSX.utils.book_new();
 
 
+    // Hoja principal
     XLSX.utils.book_append_sheet(
       workbook,
       worksheet,
@@ -2471,15 +2804,41 @@ async function exportarAportesExcel() {
     );
 
 
-    XLSX.writeFile(
+    // Hoja de socios
+    XLSX.utils.book_append_sheet(
       workbook,
-      "The_Cow_Money_Aportes_" +
-      mes +
-      ".xlsx"
+      worksheetSocios,
+      "Socios"
     );
 
 
-  } catch (error) {
+    // ========================================================
+    // NOMBRE DEL ARCHIVO
+    // ========================================================
+
+    const fechaArchivo =
+      obtenerFechaLocal();
+
+
+    const nombreArchivo =
+      "The_Cow_Money_Aportes_" +
+      fechaArchivo +
+      ".xlsx";
+
+
+    // ========================================================
+    // DESCARGAR EXCEL
+    // ========================================================
+
+    XLSX.writeFile(
+      workbook,
+      nombreArchivo
+    );
+
+
+  }
+
+  catch (error) {
 
     console.error(
       "Error exportando Excel:",
@@ -2488,7 +2847,7 @@ async function exportarAportesExcel() {
 
 
     alert(
-      "No se pudo generar el Excel:\n" +
+      "No se pudo generar el Excel:\n\n" +
       error.message
     );
 
@@ -2665,11 +3024,17 @@ function convertirFechaUTC(
   return new Date(
     Date.UTC(
 
-      Number(partes[0]),
+      Number(
+        partes[0]
+      ),
 
-      Number(partes[1]) - 1,
+      Number(
+        partes[1]
+      ) - 1,
 
-      Number(partes[2])
+      Number(
+        partes[2]
+      )
 
     )
   );
