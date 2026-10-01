@@ -18,15 +18,10 @@ const supabaseClient = window.supabase.createClient(
 // ============================================================
 
 let usuarioActual = null;
-
 let socios = [];
-
 let aportes = [];
 
-let mesAportesSeleccionado =
-  obtenerMesActual();
-
-let aporteEditandoId = null;
+let mesAportesSeleccionado = obtenerMesActual();
 
 
 // ============================================================
@@ -116,17 +111,14 @@ document.addEventListener(
 
         await mostrarAplicacion();
 
-      }
-
-      else {
+      } else {
 
         mostrarLogin();
 
       }
 
-    }
 
-    catch (error) {
+    } catch (error) {
 
       console.error(
         "Error iniciando aplicación:",
@@ -169,23 +161,25 @@ function configurarEventos() {
 
   document
     .querySelectorAll(".menu-card")
-    .forEach(function (boton) {
+    .forEach(
+      function (boton) {
 
-      boton.addEventListener(
-        "click",
-        function () {
+        boton.addEventListener(
+          "click",
+          function () {
 
-          const modulo =
-            boton.getAttribute(
-              "data-modulo"
-            );
+            const modulo =
+              boton.getAttribute(
+                "data-modulo"
+              );
 
-          abrirModulo(modulo);
+            abrirModulo(modulo);
 
-        }
-      );
+          }
+        );
 
-    });
+      }
+    );
 
 
   if (volverPanel) {
@@ -254,9 +248,8 @@ async function iniciarSesion(event) {
 
     await mostrarAplicacion();
 
-  }
 
-  catch (error) {
+  } catch (error) {
 
     console.error(
       "Error en login:",
@@ -326,9 +319,7 @@ async function cerrarSesion() {
 
     await supabaseClient.auth.signOut();
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.error(
       "Error cerrando sesión:",
@@ -338,7 +329,9 @@ async function cerrarSesion() {
   }
 
 
-  usuarioActual = null;
+  usuarioActual =
+    null;
+
 
   mostrarLogin();
 
@@ -359,9 +352,7 @@ async function cargarDatosIniciales() {
 
     await cargarSocios();
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.error(
       "ERROR REAL AL CARGAR SOCIOS:",
@@ -381,9 +372,7 @@ async function cargarDatosIniciales() {
 
     await cargarAportes();
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.error(
       "ERROR AL CARGAR APORTES:",
@@ -688,9 +677,7 @@ async function abrirModulo(modulo) {
 
     }
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.error(
       "Error abriendo módulo:",
@@ -1162,7 +1149,9 @@ function mostrarModuloAportes() {
       </div>
 
 
-      <div id="tabla-aportes-mes">
+      <div
+        id="tabla-aportes-mes"
+      >
 
         ${generarTablaAportesMes()}
 
@@ -1363,7 +1352,6 @@ function generarTablaAportesMes() {
               <th>Fecha pago</th>
               <th>Estado</th>
               <th>Observación</th>
-              <th>Acción</th>
 
             </tr>
 
@@ -1373,7 +1361,7 @@ function generarTablaAportesMes() {
 
             <tr>
 
-              <td colspan="9">
+              <td colspan="8">
 
                 No hay aportes registrados
                 para este mes.
@@ -1503,9 +1491,7 @@ function generarTablaAportesMes() {
                       <button
                         type="button"
                         class="secondary"
-                        onclick="editarAporte('${escapeHtml(
-                          aporte.id
-                        )}')"
+                        onclick="editarAporte('${aporte.id}')"
                       >
                         ✏️ Editar
                       </button>
@@ -1563,9 +1549,7 @@ function calcularResumenAportes(lista) {
         );
 
 
-      if (
-        aporte.estado === "PAGADO"
-      ) {
+      if (aporte.estado === "PAGADO") {
 
         pagados++;
 
@@ -1578,7 +1562,8 @@ function calcularResumenAportes(lista) {
         atrasados++;
 
         pendiente +=
-          valor + multa;
+          valor +
+          multa;
 
       }
 
@@ -1587,7 +1572,8 @@ function calcularResumenAportes(lista) {
         pendientes++;
 
         pendiente +=
-          valor + multa;
+          valor +
+          multa;
 
       }
 
@@ -1627,21 +1613,16 @@ function calcularResumenAportes(lista) {
 // ============================================================
 // EDITAR APORTE
 // ============================================================
-// NUEVA VERSIÓN
-// Ya no utiliza prompt().
-// Abre un formulario dentro de la aplicación.
-// ============================================================
 
-function editarAporte(aporteId) {
+async function editarAporte(
+  aporteId
+) {
 
   const aporte =
     aportes.find(
       function (a) {
 
-        return (
-          String(a.id) ===
-          String(aporteId)
-        );
+        return a.id === aporteId;
 
       }
     );
@@ -1658,679 +1639,67 @@ function editarAporte(aporteId) {
   }
 
 
-  aporteEditandoId =
-    aporte.id;
-
-
-  const socio =
-    socios.find(
-      function (s) {
-
-        return (
-          s.id ===
-          aporte.socio_id
-        );
-
-      }
-    );
-
-
-  const nombreSocio =
-    socio
-      ? socio.nombre
-      : "Socio desconocido";
-
-
-  const fechaPago =
+  const fechaPagoActual =
     aporte.fecha_pago || "";
 
 
-  const estado =
-    aporte.estado ||
-    "PENDIENTE";
-
-
-  const observacion =
-    aporte.observacion ||
-    "";
-
-
-  const modalExistente =
-    document.getElementById(
-      "modal-editar-aporte"
+  const fechaPago =
+    prompt(
+      "Fecha real de pago (AAAA-MM-DD):",
+      fechaPagoActual
     );
 
 
-  if (modalExistente) {
-
-    modalExistente.remove();
-
-  }
-
-
-  const modal =
-    document.createElement(
-      "div"
-    );
-
-
-  modal.id =
-    "modal-editar-aporte";
-
-
-  modal.style.position =
-    "fixed";
-
-  modal.style.top =
-    "0";
-
-  modal.style.left =
-    "0";
-
-  modal.style.right =
-    "0";
-
-  modal.style.bottom =
-    "0";
-
-  modal.style.background =
-    "rgba(0,0,0,0.55)";
-
-  modal.style.display =
-    "flex";
-
-  modal.style.alignItems =
-    "center";
-
-  modal.style.justifyContent =
-    "center";
-
-  modal.style.zIndex =
-    "99999";
-
-  modal.style.padding =
-    "20px";
-
-
-  modal.innerHTML = `
-
-    <div
-      style="
-        background:#ffffff;
-        width:100%;
-        max-width:520px;
-        border-radius:14px;
-        padding:25px;
-        box-shadow:0 15px 50px rgba(0,0,0,.25);
-      "
-    >
-
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          margin-bottom:20px;
-        "
-      >
-
-        <div>
-
-          <h2
-            style="
-              margin:0;
-            "
-          >
-            ✏️ Editar aporte
-          </h2>
-
-          <p
-            style="
-              margin:6px 0 0;
-              color:#666;
-            "
-          >
-            ${escapeHtml(
-              nombreSocio
-            )}
-          </p>
-
-        </div>
-
-
-        <button
-          type="button"
-          id="btn-cerrar-editor-aporte"
-          style="
-            border:0;
-            background:transparent;
-            font-size:24px;
-            cursor:pointer;
-          "
-        >
-          ✕
-        </button>
-
-      </div>
-
-
-      <div
-        style="
-          background:#f5f5f5;
-          padding:15px;
-          border-radius:10px;
-          margin-bottom:18px;
-        "
-      >
-
-        <div
-          style="
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:10px;
-          "
-        >
-
-          <div>
-
-            <strong>
-              Vencimiento
-            </strong>
-
-            <div>
-              ${formatearFecha(
-                aporte.fecha_vencimiento
-              )}
-            </div>
-
-          </div>
-
-
-          <div>
-
-            <strong>
-              Aporte
-            </strong>
-
-            <div>
-              $ ${Number(
-                aporte.valor_aporte || 0
-              ).toFixed(2)}
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div
-        style="
-          margin-bottom:15px;
-        "
-      >
-
-        <label
-          for="editar-fecha-pago"
-          style="
-            display:block;
-            margin-bottom:6px;
-            font-weight:600;
-          "
-        >
-          Fecha de pago
-        </label>
-
-        <input
-          id="editar-fecha-pago"
-          type="date"
-          value="${escapeHtml(
-            fechaPago
-          )}"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            padding:10px;
-            border:1px solid #ccc;
-            border-radius:8px;
-          "
-        />
-
-      </div>
-
-
-      <div
-        style="
-          margin-bottom:15px;
-        "
-      >
-
-        <label
-          for="editar-estado"
-          style="
-            display:block;
-            margin-bottom:6px;
-            font-weight:600;
-          "
-        >
-          Estado
-        </label>
-
-        <select
-          id="editar-estado"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            padding:10px;
-            border:1px solid #ccc;
-            border-radius:8px;
-          "
-        >
-
-          <option
-            value="PENDIENTE"
-            ${estado === "PENDIENTE" ? "selected" : ""}
-          >
-            PENDIENTE
-          </option>
-
-          <option
-            value="ATRASADO"
-            ${estado === "ATRASADO" ? "selected" : ""}
-          >
-            ATRASADO
-          </option>
-
-          <option
-            value="PAGADO"
-            ${estado === "PAGADO" ? "selected" : ""}
-          >
-            PAGADO
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <div
-        style="
-          margin-bottom:15px;
-        "
-      >
-
-        <label
-          for="editar-observacion"
-          style="
-            display:block;
-            margin-bottom:6px;
-            font-weight:600;
-          "
-        >
-          Observación
-        </label>
-
-        <textarea
-          id="editar-observacion"
-          rows="3"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            padding:10px;
-            border:1px solid #ccc;
-            border-radius:8px;
-            resize:vertical;
-          "
-        >${escapeHtml(
-          observacion
-        )}</textarea>
-
-      </div>
-
-
-      <div
-        id="editar-calculo-aporte"
-        style="
-          background:#f5f5f5;
-          padding:14px;
-          border-radius:10px;
-          margin-bottom:18px;
-        "
-      >
-        Calculando...
-      </div>
-
-
-      <p
-        id="editar-mensaje-aporte"
-        style="
-          margin:0 0 15px;
-          min-height:20px;
-        "
-      ></p>
-
-
-      <div
-        style="
-          display:flex;
-          justify-content:flex-end;
-          gap:10px;
-        "
-      >
-
-        <button
-          type="button"
-          id="btn-cancelar-editor-aporte"
-          class="secondary"
-        >
-          Cancelar
-        </button>
-
-
-        <button
-          type="button"
-          id="btn-guardar-editor-aporte"
-          class="primary"
-        >
-          💾 Guardar cambios
-        </button>
-
-      </div>
-
-    </div>
-
-  `;
-
-
-  document.body.appendChild(
-    modal
-  );
-
-
-  const fechaInput =
-    document.getElementById(
-      "editar-fecha-pago"
-    );
-
-
-  const estadoSelect =
-    document.getElementById(
-      "editar-estado"
-    );
-
-
-  const observacionInput =
-    document.getElementById(
-      "editar-observacion"
-    );
-
-
-  const calculoDiv =
-    document.getElementById(
-      "editar-calculo-aporte"
-    );
-
-
-  const mensaje =
-    document.getElementById(
-      "editar-mensaje-aporte"
-    );
-
-
-  const btnGuardar =
-    document.getElementById(
-      "btn-guardar-editor-aporte"
-    );
-
-
-  const btnCancelar =
-    document.getElementById(
-      "btn-cancelar-editor-aporte"
-    );
-
-
-  const btnCerrar =
-    document.getElementById(
-      "btn-cerrar-editor-aporte"
-    );
-
-
-  function actualizarCalculoEditor() {
-
-    const fecha =
-      fechaInput.value;
-
-
-    if (!fecha) {
-
-      calculoDiv.innerHTML = `
-
-        <strong>
-          Sin fecha de pago
-        </strong>
-
-        <br><br>
-
-        La multa y el total se calcularán
-        cuando ingreses una fecha de pago.
-
-      `;
-
-      return;
-
-    }
-
-
-    const calculo =
-      calcularMulta(
-        aporte.fecha_vencimiento,
-        fecha
-      );
-
-
-    const valor =
-      Number(
-        aporte.valor_aporte || 0
-      );
-
-
-    const total =
-      valor +
-      calculo.multa;
-
-
-    calculoDiv.innerHTML = `
-
-      <strong>
-        Cálculo actualizado
-      </strong>
-
-      <br><br>
-
-      Días de atraso:
-      <strong>
-        ${calculo.diasAtraso}
-      </strong>
-
-      <br>
-
-      Multa:
-      <strong>
-        $ ${calculo.multa.toFixed(2)}
-      </strong>
-
-      <br>
-
-      Total:
-      <strong>
-        $ ${total.toFixed(2)}
-      </strong>
-
-    `;
-
-  }
-
-
-  fechaInput.addEventListener(
-    "change",
-    actualizarCalculoEditor
-  );
-
-
-  estadoSelect.addEventListener(
-    "change",
-    actualizarCalculoEditor
-  );
-
-
-  btnCerrar.addEventListener(
-    "click",
-    cerrarEditorAporte
-  );
-
-
-  btnCancelar.addEventListener(
-    "click",
-    cerrarEditorAporte
-  );
-
-
-  modal.addEventListener(
-    "click",
-    function (event) {
-
-      if (
-        event.target === modal
-      ) {
-
-        cerrarEditorAporte();
-
-      }
-
-    }
-  );
-
-
-  btnGuardar.addEventListener(
-    "click",
-    async function () {
-
-      await guardarEdicionAporte(
-        aporte
-      );
-
-    }
-  );
-
-
-  actualizarCalculoEditor();
-
-}
-
-
-// ============================================================
-// CERRAR EDITOR DE APORTE
-// ============================================================
-
-function cerrarEditorAporte() {
-
-  const modal =
-    document.getElementById(
-      "modal-editar-aporte"
-    );
-
-
-  if (modal) {
-
-    modal.remove();
-
-  }
-
-
-  aporteEditandoId =
-    null;
-
-}
-
-
-// ============================================================
-// GUARDAR EDICIÓN DE APORTE
-// ============================================================
-
-async function guardarEdicionAporte(
-  aporte
-) {
-
-  const fechaInput =
-    document.getElementById(
-      "editar-fecha-pago"
-    );
-
-
-  const estadoSelect =
-    document.getElementById(
-      "editar-estado"
-    );
-
-
-  const observacionInput =
-    document.getElementById(
-      "editar-observacion"
-    );
-
-
-  const mensaje =
-    document.getElementById(
-      "editar-mensaje-aporte"
-    );
-
-
-  const boton =
-    document.getElementById(
-      "btn-guardar-editor-aporte"
-    );
-
-
-  if (
-    !fechaInput ||
-    !estadoSelect ||
-    !observacionInput ||
-    !boton
-  ) {
+  if (fechaPago === null) {
 
     return;
 
   }
 
 
-  const fechaPago =
-    fechaInput.value || null;
-
-
   const estado =
-    estadoSelect.value
-      .toUpperCase();
+    prompt(
+      "Estado: PAGADO, PENDIENTE o ATRASADO",
+      aporte.estado || "PAGADO"
+    );
+
+
+  if (estado === null) {
+
+    return;
+
+  }
 
 
   const observacion =
-    observacionInput.value.trim();
+    prompt(
+      "Observación:",
+      aporte.observacion || ""
+    );
 
 
-  let multa = 0;
+  if (observacion === null) {
 
-  let total = 0;
+    return;
+
+  }
 
 
-  const valor =
+  let multa =
     Number(
-      aporte.valor_aporte || 0
+      aporte.multa || 0
+    );
+
+
+  let total =
+    Number(
+      aporte.total_pagado || 0
     );
 
 
   if (
-    estado === "PAGADO" &&
-    fechaPago
+    fechaPago &&
+    estado.toUpperCase() === "PAGADO"
   ) {
 
     const calculo =
@@ -2345,51 +1714,10 @@ async function guardarEdicionAporte(
 
 
     total =
-      valor +
+      Number(
+        aporte.valor_aporte || 0
+      ) +
       multa;
-
-  }
-
-  else {
-
-    multa =
-      Number(
-        aporte.multa || 0
-      );
-
-
-    total =
-      Number(
-        aporte.total_pagado || 0
-      );
-
-
-    if (
-      estado !== "PAGADO"
-    ) {
-
-      total = 0;
-
-    }
-
-  }
-
-
-  boton.disabled =
-    true;
-
-
-  boton.textContent =
-    "Guardando...";
-
-
-  if (mensaje) {
-
-    mensaje.textContent =
-      "Guardando cambios...";
-
-    mensaje.style.color =
-      "#555";
 
   }
 
@@ -2404,10 +1732,10 @@ async function guardarEdicionAporte(
         .update({
 
           fecha_pago:
-            fechaPago,
+            fechaPago || null,
 
           estado:
-            estado,
+            estado.toUpperCase(),
 
           multa:
             multa,
@@ -2416,13 +1744,12 @@ async function guardarEdicionAporte(
             total,
 
           observacion:
-            observacion ||
-            null
+            observacion || null
 
         })
         .eq(
           "id",
-          aporte.id
+          aporteId
         );
 
 
@@ -2435,41 +1762,21 @@ async function guardarEdicionAporte(
 
     await cargarAportes();
 
-
-    cerrarEditorAporte();
-
-
     mostrarModuloAportes();
 
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.error(
-      "Error guardando aporte:",
+      "Error editando aporte:",
       error
     );
 
 
-    if (mensaje) {
-
-      mensaje.textContent =
-        "❌ No se pudo guardar: " +
-        error.message;
-
-      mensaje.style.color =
-        "red";
-
-    }
-
-
-    boton.disabled =
-      false;
-
-
-    boton.textContent =
-      "💾 Guardar cambios";
+    alert(
+      "No se pudo editar el aporte:\n" +
+      error.message
+    );
 
   }
 
@@ -2574,10 +1881,7 @@ function configurarFormularioPago() {
       aportes.find(
         function (a) {
 
-          return (
-            a.id ===
-            aporteId
-          );
+          return a.id === aporteId;
 
         }
       );
@@ -2718,10 +2022,7 @@ function configurarFormularioPago() {
         aportes.find(
           function (a) {
 
-            return (
-              a.id ===
-              aporteId
-            );
+            return a.id === aporteId;
 
           }
         );
@@ -2800,12 +2101,10 @@ function configurarFormularioPago() {
 
         await cargarAportes();
 
-
         mostrarModuloAportes();
 
-      }
 
-      catch (error) {
+      } catch (error) {
 
         console.error(
           "Error registrando pago:",
@@ -2817,15 +2116,15 @@ function configurarFormularioPago() {
           "Error al registrar el pago: " +
           error.message;
 
-
-        boton.disabled =
-          false;
-
-
-        boton.textContent =
-          "Registrar pago";
-
       }
+
+
+      boton.disabled =
+        false;
+
+
+      boton.textContent =
+        "Registrar pago";
 
     }
   );
@@ -2862,10 +2161,8 @@ function cargarAportesSocio(
       function (aporte) {
 
         return (
-          aporte.socio_id ===
-          socioId &&
-          aporte.estado !==
-          "PAGADO"
+          aporte.socio_id === socioId &&
+          aporte.estado !== "PAGADO"
         );
 
       }
@@ -2973,33 +2270,25 @@ function calcularMulta(
   let multa = 0;
 
 
-  if (
-    diasAtraso <= 0
-  ) {
+  if (diasAtraso <= 0) {
 
     multa = 0;
 
   }
 
-  else if (
-    diasAtraso <= 7
-  ) {
+  else if (diasAtraso <= 7) {
 
     multa = 4;
 
   }
 
-  else if (
-    diasAtraso <= 14
-  ) {
+  else if (diasAtraso <= 14) {
 
     multa = 5;
 
   }
 
-  else if (
-    diasAtraso <= 21
-  ) {
+  else if (diasAtraso <= 21) {
 
     multa = 6;
 
@@ -3028,22 +2317,29 @@ function calcularMulta(
 // ============================================================
 // EXPORTAR APORTES A EXCEL
 // ============================================================
-// Genera XLSX real.
-// Incluye TODOS los socios activos.
+// IMPORTANTE:
+// Antes de crear el Excel se vuelven a cargar los datos
+// directamente desde Supabase.
+//
+// Esto garantiza que la observación recién guardada,
+// así como cualquier otro cambio, aparezca en el Excel.
 // ============================================================
 
 async function exportarAportesExcel() {
 
   try {
 
+    // --------------------------------------------------------
+    // VERIFICAR XLSX
+    // --------------------------------------------------------
+
     if (
-      typeof XLSX ===
-      "undefined"
+      typeof XLSX === "undefined"
     ) {
 
       alert(
         "La librería de Excel no está cargada.\n\n" +
-        "Debes agregar SheetJS/XLSX al HTML."
+        "Verifica que el HTML tenga incluida la librería XLSX."
       );
 
       return;
@@ -3051,10 +2347,57 @@ async function exportarAportesExcel() {
     }
 
 
+    // --------------------------------------------------------
+    // RECARGAR APORTES DESDE SUPABASE
+    // --------------------------------------------------------
+
+    const resultado =
+      await supabaseClient
+        .from("aportes")
+        .select(`
+          id,
+          socio_id,
+          fecha_vencimiento,
+          valor_aporte,
+          fecha_pago,
+          estado,
+          multa,
+          total_pagado,
+          observacion
+        `)
+        .order(
+          "fecha_vencimiento",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (resultado.error) {
+
+      throw resultado.error;
+
+    }
+
+
+    // Actualizar variable global
+
+    aportes =
+      resultado.data || [];
+
+
+    // --------------------------------------------------------
+    // MES A EXPORTAR
+    // --------------------------------------------------------
+
     const mes =
       mesAportesSeleccionado ||
       obtenerMesActual();
 
+
+    // --------------------------------------------------------
+    // FILTRAR APORTES DEL MES
+    // --------------------------------------------------------
 
     const aportesMes =
       aportes.filter(
@@ -3062,27 +2405,30 @@ async function exportarAportesExcel() {
 
           return (
             aporte.fecha_vencimiento &&
-            aporte.fecha_vencimiento
-              .substring(0, 7) ===
-            mes
+            aporte.fecha_vencimiento.substring(0, 7) === mes
           );
 
         }
       );
 
 
+    // --------------------------------------------------------
+    // CREAR FILAS
+    // --------------------------------------------------------
+
     const filas = [];
 
+
+    // --------------------------------------------------------
+    // SOCIOS ACTIVOS
+    // --------------------------------------------------------
 
     const sociosActivos =
       socios
         .filter(
           function (socio) {
 
-            return (
-              socio.estado ===
-              "ACTIVO"
-            );
+            return socio.estado === "ACTIVO";
 
           }
         )
@@ -3097,6 +2443,10 @@ async function exportarAportesExcel() {
         );
 
 
+    // --------------------------------------------------------
+    // RECORRER TODOS LOS SOCIOS
+    // --------------------------------------------------------
+
     sociosActivos.forEach(
       function (socio) {
 
@@ -3105,13 +2455,16 @@ async function exportarAportesExcel() {
             function (aporte) {
 
               return (
-                aporte.socio_id ===
-                socio.id
+                aporte.socio_id === socio.id
               );
 
             }
           );
 
+
+        // ----------------------------------------------------
+        // SOCIO SIN REGISTRO
+        // ----------------------------------------------------
 
         if (!registros.length) {
 
@@ -3148,6 +2501,10 @@ async function exportarAportesExcel() {
         }
 
 
+        // ----------------------------------------------------
+        // SOCIO CON REGISTRO
+        // ----------------------------------------------------
+
         registros.forEach(
           function (aporte) {
 
@@ -3157,9 +2514,11 @@ async function exportarAportesExcel() {
                 socio.nombre || "",
 
               "Vencimiento":
-                formatearFecha(
-                  aporte.fecha_vencimiento
-                ),
+                aporte.fecha_vencimiento
+                  ? formatearFecha(
+                      aporte.fecha_vencimiento
+                    )
+                  : "",
 
               "Aporte":
                 Number(
@@ -3186,6 +2545,13 @@ async function exportarAportesExcel() {
               "Estado":
                 aporte.estado || "",
 
+              // =================================================
+              // OBSERVACIÓN
+              // =================================================
+              // Se toma directamente del registro recién
+              // consultado en Supabase.
+              // =================================================
+
               "Observación":
                 aporte.observacion || ""
 
@@ -3198,11 +2564,19 @@ async function exportarAportesExcel() {
     );
 
 
+    // --------------------------------------------------------
+    // CREAR HOJA
+    // --------------------------------------------------------
+
     const worksheet =
       XLSX.utils.json_to_sheet(
         filas
       );
 
+
+    // --------------------------------------------------------
+    // ANCHOS DE COLUMNAS
+    // --------------------------------------------------------
 
     worksheet["!cols"] = [
 
@@ -3235,11 +2609,15 @@ async function exportarAportesExcel() {
       },
 
       {
-        wch: 30
+        wch: 40
       }
 
     ];
 
+
+    // --------------------------------------------------------
+    // CREAR LIBRO
+    // --------------------------------------------------------
 
     const workbook =
       XLSX.utils.book_new();
@@ -3252,6 +2630,10 @@ async function exportarAportesExcel() {
     );
 
 
+    // --------------------------------------------------------
+    // GENERAR ARCHIVO
+    // --------------------------------------------------------
+
     XLSX.writeFile(
       workbook,
       "The_Cow_Money_Aportes_" +
@@ -3259,9 +2641,8 @@ async function exportarAportesExcel() {
       ".xlsx"
     );
 
-  }
 
-  catch (error) {
+  } catch (error) {
 
     console.error(
       "Error exportando Excel:",
@@ -3270,7 +2651,7 @@ async function exportarAportesExcel() {
 
 
     alert(
-      "No se pudo generar el Excel:\n" +
+      "No se pudo generar el Excel:\n\n" +
       error.message
     );
 
@@ -3439,6 +2820,13 @@ function obtenerFechaLocal() {
 function convertirFechaUTC(
   fecha
 ) {
+
+  if (!fecha) {
+
+    return new Date(NaN);
+
+  }
+
 
   const partes =
     fecha.split("-");
