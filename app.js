@@ -21,6 +21,9 @@ let usuarioActual = null;
 let socios = [];
 let aportes = [];
 
+// ID del aporte que estamos editando
+let aporteEditandoId = null;
+
 
 // ============================================================
 // ELEMENTOS
@@ -316,10 +319,6 @@ async function cargarDatosIniciales() {
     "Conectando con Supabase...";
 
 
-  // ----------------------------------------------------------
-  // SOCIOS
-  // ----------------------------------------------------------
-
   try {
 
     await cargarSocios();
@@ -339,10 +338,6 @@ async function cargarDatosIniciales() {
 
   }
 
-
-  // ----------------------------------------------------------
-  // APORTES
-  // ----------------------------------------------------------
 
   try {
 
@@ -364,10 +359,6 @@ async function cargarDatosIniciales() {
 
   }
 
-
-  // ----------------------------------------------------------
-  // TODO CORRECTO
-  // ----------------------------------------------------------
 
   connectionStatus.textContent =
     "Conexión correcta. Socios encontrados: " +
@@ -613,10 +604,6 @@ async function abrirModulo(modulo) {
 
   try {
 
-    // --------------------------------------------------------
-    // SOCIOS
-    // --------------------------------------------------------
-
     if (modulo === "socios") {
 
       if (!socios.length) {
@@ -632,10 +619,6 @@ async function abrirModulo(modulo) {
     }
 
 
-    // --------------------------------------------------------
-    // APORTES
-    // --------------------------------------------------------
-
     if (modulo === "aportes") {
 
       await cargarAportes();
@@ -647,10 +630,6 @@ async function abrirModulo(modulo) {
     }
 
 
-    // --------------------------------------------------------
-    // PRÉSTAMOS
-    // --------------------------------------------------------
-
     if (modulo === "prestamos") {
 
       mostrarModuloPrestamos();
@@ -659,10 +638,6 @@ async function abrirModulo(modulo) {
 
     }
 
-
-    // --------------------------------------------------------
-    // CAJA
-    // --------------------------------------------------------
 
     if (modulo === "caja") {
 
@@ -869,8 +844,12 @@ function mostrarModuloSocios() {
 
 function mostrarModuloAportes() {
 
+  // Al abrir el módulo comenzamos mostrando todos
+  aporteEditandoId = null;
+
+
   const resumen =
-    calcularResumenAportes();
+    calcularResumenAportes(aportes);
 
 
   const html = `
@@ -888,97 +867,80 @@ function mostrarModuloAportes() {
     </div>
 
 
+    <!-- =====================================================
+         RESUMEN
+         ===================================================== -->
+
     <div class="resumen-aportes">
 
-
       <div class="resumen-card">
-
         <strong>
           ${resumen.total}
         </strong>
-
         <span>
           Total registros
         </span>
-
       </div>
 
-
       <div class="resumen-card">
-
         <strong>
           ${resumen.pagados}
         </strong>
-
         <span>
           Pagados
         </span>
-
       </div>
 
-
       <div class="resumen-card">
-
         <strong>
           ${resumen.pendientes}
         </strong>
-
         <span>
           Pendientes
         </span>
-
       </div>
 
-
       <div class="resumen-card">
-
         <strong>
           ${resumen.atrasados}
         </strong>
-
         <span>
           Atrasados
         </span>
-
       </div>
 
-
       <div class="resumen-card">
-
         <strong>
           $ ${resumen.multas.toFixed(2)}
         </strong>
-
         <span>
           Multas
         </span>
-
       </div>
 
-
       <div class="resumen-card">
-
         <strong>
           $ ${resumen.pendiente.toFixed(2)}
         </strong>
-
         <span>
           Total pendiente
         </span>
-
       </div>
-
 
     </div>
 
 
+    <!-- =====================================================
+         REGISTRAR / EDITAR PAGO
+         ===================================================== -->
+
     <div class="panel">
 
-      <h3>
+      <h3 id="titulo-formulario-pago">
         Registrar pago
       </h3>
 
-      <p>
+      <p id="texto-formulario-pago">
         Selecciona el socio, el aporte
         y la fecha real en que realizó
         el pago.
@@ -986,7 +948,6 @@ function mostrarModuloAportes() {
 
 
       <div class="form-grid">
-
 
         <div>
 
@@ -1068,7 +1029,6 @@ function mostrarModuloAportes() {
 
         </div>
 
-
       </div>
 
 
@@ -1094,20 +1054,166 @@ function mostrarModuloAportes() {
       </button>
 
 
+      <button
+        id="btn-cancelar-edicion"
+        class="secondary"
+        type="button"
+        style="display:none;"
+      >
+
+        Cancelar edición
+
+      </button>
+
+
       <p
         id="mensaje-pago"
         class="message"
       ></p>
 
+    </div>
+
+
+    <!-- =====================================================
+         FILTROS
+         ===================================================== -->
+
+    <div class="panel">
+
+      <h3>
+        📅 Reporte mensual
+      </h3>
+
+      <div class="form-grid">
+
+        <div>
+
+          <label>
+            Mes
+          </label>
+
+          <select id="filtro-mes">
+
+            <option value="TODOS">
+              Todos los meses
+            </option>
+
+            ${generarOpcionesMeses()}
+
+          </select>
+
+        </div>
+
+
+        <div>
+
+          <label>
+            Buscar socio
+          </label>
+
+          <select id="filtro-socio">
+
+            <option value="TODOS">
+              Todos los socios
+            </option>
+
+            ${socios
+              .filter(
+                function (s) {
+                  return s.estado === "ACTIVO";
+                }
+              )
+              .sort(
+                function (a, b) {
+                  return a.nombre.localeCompare(
+                    b.nombre
+                  );
+                }
+              )
+              .map(
+                function (s) {
+
+                  return `
+
+                    <option
+                      value="${s.id}"
+                    >
+                      ${escapeHtml(
+                        s.nombre
+                      )}
+                    </option>
+
+                  `;
+
+                }
+              )
+              .join("")}
+
+          </select>
+
+        </div>
+
+
+        <div>
+
+          <label>
+            Estado
+          </label>
+
+          <select id="filtro-estado">
+
+            <option value="TODOS">
+              Todos
+            </option>
+
+            <option value="PAGADO">
+              Pagados
+            </option>
+
+            <option value="PENDIENTE">
+              Pendientes
+            </option>
+
+            <option value="ATRASADO">
+              Atrasados
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <br>
+
+      <button
+        id="btn-exportar-excel"
+        class="primary"
+        type="button"
+      >
+
+        📊 Exportar a Excel
+
+      </button>
 
     </div>
 
+
+    <!-- =====================================================
+         REGISTRO
+         ===================================================== -->
 
     <div class="panel">
 
       <h3>
         Registro de aportes
       </h3>
+
+
+      <div
+        id="contador-reporte"
+      ></div>
 
 
       <div class="tabla-contenedor">
@@ -1146,13 +1252,15 @@ function mostrarModuloAportes() {
                 Estado
               </th>
 
+              <th>
+                Acción
+              </th>
+
             </tr>
 
           </thead>
 
-          <tbody>
-
-            ${generarFilasAportes()}
+          <tbody id="tabla-aportes-body">
 
           </tbody>
 
@@ -1171,6 +1279,290 @@ function mostrarModuloAportes() {
 
   configurarFormularioPago();
 
+  configurarFiltrosAportes();
+
+  actualizarTablaAportes();
+
+}
+
+
+// ============================================================
+// GENERAR OPCIONES DE MESES
+// ============================================================
+
+function generarOpcionesMeses() {
+
+  const meses =
+    {};
+
+  aportes.forEach(function (aporte) {
+
+    if (!aporte.fecha_vencimiento) {
+      return;
+    }
+
+    const mes =
+      aporte.fecha_vencimiento.substring(
+        0,
+        7
+      );
+
+    meses[mes] = true;
+
+  });
+
+
+  return Object.keys(meses)
+    .sort()
+    .reverse()
+    .map(function (mes) {
+
+      const partes =
+        mes.split("-");
+
+      const año =
+        partes[0];
+
+      const numeroMes =
+        Number(partes[1]);
+
+      const nombresMeses = [
+
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre"
+
+      ];
+
+      return `
+
+        <option value="${mes}">
+
+          ${nombresMeses[numeroMes - 1]}
+          ${año}
+
+        </option>
+
+      `;
+
+    })
+    .join("");
+
+}
+
+
+// ============================================================
+// CONFIGURAR FILTROS
+// ============================================================
+
+function configurarFiltrosAportes() {
+
+  const filtroMes =
+    document.getElementById(
+      "filtro-mes"
+    );
+
+  const filtroSocio =
+    document.getElementById(
+      "filtro-socio"
+    );
+
+  const filtroEstado =
+    document.getElementById(
+      "filtro-estado"
+    );
+
+  const botonExcel =
+    document.getElementById(
+      "btn-exportar-excel"
+    );
+
+
+  if (filtroMes) {
+
+    filtroMes.addEventListener(
+      "change",
+      actualizarTablaAportes
+    );
+
+  }
+
+
+  if (filtroSocio) {
+
+    filtroSocio.addEventListener(
+      "change",
+      actualizarTablaAportes
+    );
+
+  }
+
+
+  if (filtroEstado) {
+
+    filtroEstado.addEventListener(
+      "change",
+      actualizarTablaAportes
+    );
+
+  }
+
+
+  if (botonExcel) {
+
+    botonExcel.addEventListener(
+      "click",
+      exportarAportesExcel
+    );
+
+  }
+
+}
+
+
+// ============================================================
+// OBTENER APORTES FILTRADOS
+// ============================================================
+
+function obtenerAportesFiltrados() {
+
+  const filtroMes =
+    document.getElementById(
+      "filtro-mes"
+    );
+
+  const filtroSocio =
+    document.getElementById(
+      "filtro-socio"
+    );
+
+  const filtroEstado =
+    document.getElementById(
+      "filtro-estado"
+    );
+
+
+  const mes =
+    filtroMes
+      ? filtroMes.value
+      : "TODOS";
+
+
+  const socio =
+    filtroSocio
+      ? filtroSocio.value
+      : "TODOS";
+
+
+  const estado =
+    filtroEstado
+      ? filtroEstado.value
+      : "TODOS";
+
+
+  return aportes.filter(
+    function (aporte) {
+
+      if (
+        mes !== "TODOS" &&
+        !aporte.fecha_vencimiento.startsWith(
+          mes
+        )
+      ) {
+
+        return false;
+
+      }
+
+
+      if (
+        socio !== "TODOS" &&
+        aporte.socio_id !== socio
+      ) {
+
+        return false;
+
+      }
+
+
+      if (
+        estado !== "TODOS" &&
+        aporte.estado !== estado
+      ) {
+
+        return false;
+
+      }
+
+
+      return true;
+
+    }
+  );
+
+}
+
+
+// ============================================================
+// ACTUALIZAR TABLA
+// ============================================================
+
+function actualizarTablaAportes() {
+
+  const lista =
+    obtenerAportesFiltrados();
+
+
+  const cuerpo =
+    document.getElementById(
+      "tabla-aportes-body"
+    );
+
+
+  const contador =
+    document.getElementById(
+      "contador-reporte"
+    );
+
+
+  if (!cuerpo) {
+    return;
+  }
+
+
+  if (contador) {
+
+    contador.innerHTML = `
+
+      <p>
+
+        Mostrando
+        <strong>
+          ${lista.length}
+        </strong>
+        registros.
+
+      </p>
+
+    `;
+
+  }
+
+
+  cuerpo.innerHTML =
+    generarFilasAportes(
+      lista
+    );
+
 }
 
 
@@ -1178,7 +1570,7 @@ function mostrarModuloAportes() {
 // RESUMEN APORTES
 // ============================================================
 
-function calcularResumenAportes() {
+function calcularResumenAportes(lista) {
 
   let pagados = 0;
 
@@ -1191,7 +1583,7 @@ function calcularResumenAportes() {
   let pendiente = 0;
 
 
-  aportes.forEach(function (aporte) {
+  lista.forEach(function (aporte) {
 
     const valor =
       Number(
@@ -1240,7 +1632,7 @@ function calcularResumenAportes() {
   return {
 
     total:
-      aportes.length,
+      lista.length,
 
     pagados:
       pagados,
@@ -1266,17 +1658,17 @@ function calcularResumenAportes() {
 // GENERAR FILAS APORTES
 // ============================================================
 
-function generarFilasAportes() {
+function generarFilasAportes(lista = aportes) {
 
-  if (!aportes.length) {
+  if (!lista.length) {
 
     return `
 
       <tr>
 
-        <td colspan="7">
+        <td colspan="8">
 
-          No hay aportes registrados.
+          No hay registros para este filtro.
 
         </td>
 
@@ -1287,7 +1679,7 @@ function generarFilasAportes() {
   }
 
 
-  return aportes
+  return lista
     .map(function (aporte) {
 
       const socio =
@@ -1352,6 +1744,20 @@ function generarFilasAportes() {
             )}
           </td>
 
+          <td>
+
+            <button
+              type="button"
+              class="secondary"
+              onclick="editarAporte('${aporte.id}')"
+            >
+
+              ✏️ Editar
+
+            </button>
+
+          </td>
+
         </tr>
 
       `;
@@ -1391,6 +1797,11 @@ function configurarFormularioPago() {
   const boton =
     document.getElementById(
       "btn-registrar-pago"
+    );
+
+  const cancelar =
+    document.getElementById(
+      "btn-cancelar-edicion"
     );
 
   const mensaje =
@@ -1459,9 +1870,7 @@ function configurarFormularioPago() {
 
 
     if (!aporte) {
-
       return;
-
     }
 
 
@@ -1622,8 +2031,11 @@ function configurarFormularioPago() {
       boton.disabled =
         true;
 
+
       boton.textContent =
-        "Registrando...";
+        aporteEditandoId
+          ? "Actualizando..."
+          : "Registrando...";
 
 
       try {
@@ -1662,7 +2074,13 @@ function configurarFormularioPago() {
 
 
         mensaje.textContent =
-          "Pago registrado correctamente.";
+          aporteEditandoId
+            ? "Pago actualizado correctamente."
+            : "Pago registrado correctamente.";
+
+
+        aporteEditandoId =
+          null;
 
 
         await cargarAportes();
@@ -1673,13 +2091,13 @@ function configurarFormularioPago() {
       } catch (error) {
 
         console.error(
-          "Error registrando pago:",
+          "Error guardando pago:",
           error
         );
 
 
         mensaje.textContent =
-          "Error al registrar el pago: " +
+          "Error al guardar el pago: " +
           error.message;
 
       }
@@ -1693,6 +2111,16 @@ function configurarFormularioPago() {
 
     }
   );
+
+
+  if (cancelar) {
+
+    cancelar.addEventListener(
+      "click",
+      cancelarEdicionAporte
+    );
+
+  }
 
 }
 
@@ -1790,6 +2218,236 @@ function cargarAportesSocio(
 
 
 // ============================================================
+// EDITAR APORTE
+// ============================================================
+
+async function editarAporte(aporteId) {
+
+  const aporte =
+    aportes.find(
+      function (a) {
+        return a.id === aporteId;
+      }
+    );
+
+
+  if (!aporte) {
+
+    alert(
+      "No se encontró el aporte."
+    );
+
+    return;
+
+  }
+
+
+  aporteEditandoId =
+    aporteId;
+
+
+  const socioSelect =
+    document.getElementById(
+      "pago-socio"
+    );
+
+  const aporteSelect =
+    document.getElementById(
+      "pago-aporte"
+    );
+
+  const fechaInput =
+    document.getElementById(
+      "pago-fecha"
+    );
+
+  const boton =
+    document.getElementById(
+      "btn-registrar-pago"
+    );
+
+  const cancelar =
+    document.getElementById(
+      "btn-cancelar-edicion"
+    );
+
+  const titulo =
+    document.getElementById(
+      "titulo-formulario-pago"
+    );
+
+  const texto =
+    document.getElementById(
+      "texto-formulario-pago"
+    );
+
+
+  if (!socioSelect) {
+
+    return;
+
+  }
+
+
+  socioSelect.value =
+    aporte.socio_id;
+
+
+  // En edición mostramos el aporte,
+  // aunque ya esté PAGADO.
+  aporteSelect.innerHTML = `
+
+    <option value="${aporte.id}">
+
+      ${formatearFecha(
+        aporte.fecha_vencimiento
+      )}
+      -
+      $
+      ${Number(
+        aporte.valor_aporte || 0
+      ).toFixed(2)}
+
+    </option>
+
+  `;
+
+
+  aporteSelect.value =
+    aporte.id;
+
+
+  fechaInput.value =
+    aporte.fecha_pago ||
+    obtenerFechaLocal();
+
+
+  titulo.textContent =
+    "✏️ Editar pago";
+
+
+  texto.textContent =
+    "Modifica la fecha de pago. La multa se recalculará automáticamente.";
+
+
+  boton.textContent =
+    "Actualizar pago";
+
+
+  if (cancelar) {
+
+    cancelar.style.display =
+      "inline-block";
+
+  }
+
+
+  // Mostrar cálculo
+  const calculo =
+    calcularMulta(
+      aporte.fecha_vencimiento,
+      fechaInput.value
+    );
+
+
+  const calcularDiv =
+    document.getElementById(
+      "calculo-pago"
+    );
+
+
+  if (calcularDiv) {
+
+    calcularDiv.innerHTML = `
+
+      <strong>
+        Cálculo del pago
+      </strong>
+
+      <br><br>
+
+      Vencimiento:
+      <strong>
+        ${formatearFecha(
+          aporte.fecha_vencimiento
+        )}
+      </strong>
+
+      <br>
+
+      Fecha de pago:
+      <strong>
+        ${formatearFecha(
+          fechaInput.value
+        )}
+      </strong>
+
+      <br>
+
+      Días de atraso:
+      <strong>
+        ${calculo.diasAtraso}
+      </strong>
+
+      <br>
+
+      Multa:
+      <strong>
+        $ ${calculo.multa.toFixed(2)}
+      </strong>
+
+      <br>
+
+      Total:
+      <strong>
+        $ ${(
+          Number(
+            aporte.valor_aporte || 0
+          ) +
+          calculo.multa
+        ).toFixed(2)}
+      </strong>
+
+    `;
+
+  }
+
+
+  // Subir al formulario
+  const formulario =
+    document.getElementById(
+      "titulo-formulario-pago"
+    );
+
+
+  if (formulario) {
+
+    formulario.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+  }
+
+}
+
+
+// ============================================================
+// CANCELAR EDICIÓN
+// ============================================================
+
+function cancelarEdicionAporte() {
+
+  aporteEditandoId =
+    null;
+
+
+  mostrarModuloAportes();
+
+}
+
+
+// ============================================================
 // CALCULAR MULTA
 // ============================================================
 //
@@ -1799,7 +2457,6 @@ function cargarAportesSocio(
 // 15 a 21      = $6
 // 22 o más     = $7
 //
-// La fecha de pago la introduce el administrador.
 // ============================================================
 
 function calcularMulta(
@@ -1882,6 +2539,198 @@ function calcularMulta(
       multa
 
   };
+
+}
+
+
+// ============================================================
+// EXPORTAR A EXCEL
+// ============================================================
+
+function exportarAportesExcel() {
+
+  const lista =
+    obtenerAportesFiltrados();
+
+
+  if (!lista.length) {
+
+    alert(
+      "No hay registros para exportar."
+    );
+
+    return;
+
+  }
+
+
+  let csv = "";
+
+
+  csv +=
+    "Socio," +
+    "Vencimiento," +
+    "Aporte," +
+    "Multa," +
+    "Total Pagado," +
+    "Fecha Pago," +
+    "Estado," +
+    "Observación\n";
+
+
+  lista.forEach(
+    function (aporte) {
+
+      const socio =
+        socios.find(
+          function (s) {
+            return s.id === aporte.socio_id;
+          }
+        );
+
+
+      const nombre =
+        socio
+          ? socio.nombre
+          : "Socio desconocido";
+
+
+      const fila = [
+
+        nombre,
+
+        formatearFecha(
+          aporte.fecha_vencimiento
+        ),
+
+        Number(
+          aporte.valor_aporte || 0
+        ).toFixed(2),
+
+        Number(
+          aporte.multa || 0
+        ).toFixed(2),
+
+        Number(
+          aporte.total_pagado || 0
+        ).toFixed(2),
+
+        aporte.fecha_pago
+          ? formatearFecha(
+              aporte.fecha_pago
+            )
+          : "",
+
+        aporte.estado || "",
+
+        aporte.observacion || ""
+
+      ];
+
+
+      csv +=
+        fila
+          .map(
+            function (valor) {
+
+              return '"' +
+                String(valor)
+                  .replaceAll(
+                    '"',
+                    '""'
+                  ) +
+                '"';
+
+            }
+          )
+          .join(",") +
+        "\n";
+
+    }
+  );
+
+
+  // BOM para que Excel reconozca correctamente
+  // tildes y caracteres especiales.
+  const BOM =
+    "\uFEFF";
+
+
+  const blob =
+    new Blob(
+      [
+        BOM +
+        csv
+      ],
+      {
+        type:
+          "text/csv;charset=utf-8;"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  const enlace =
+    document.createElement(
+      "a"
+    );
+
+
+  enlace.href =
+    url;
+
+
+  const filtroMes =
+    document.getElementById(
+      "filtro-mes"
+    );
+
+
+  let nombreArchivo =
+    "The_Cow_Money_Aportes";
+
+
+  if (
+    filtroMes &&
+    filtroMes.value !== "TODOS"
+  ) {
+
+    nombreArchivo +=
+      "_" +
+      filtroMes.value;
+
+  }
+
+
+  nombreArchivo +=
+    ".csv";
+
+
+  enlace.download =
+    nombreArchivo;
+
+
+  document.body.appendChild(
+    enlace
+  );
+
+
+  enlace.click();
+
+
+  document.body.removeChild(
+    enlace
+  );
+
+
+  URL.revokeObjectURL(
+    url
+  );
 
 }
 
