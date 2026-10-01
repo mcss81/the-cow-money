@@ -14,7 +14,9 @@
 
   <div id="app">
 
-    <!-- LOGIN -->
+    <!-- =====================================================
+         LOGIN
+         ===================================================== -->
 
     <section id="login-screen" class="screen login-screen">
 
@@ -73,14 +75,18 @@
     </section>
 
 
-    <!-- PANEL PRINCIPAL -->
+    <!-- =====================================================
+         PANEL PRINCIPAL
+         ===================================================== -->
 
     <section
       id="main-screen"
       class="screen hidden"
     >
 
-      <!-- BARRA SUPERIOR -->
+      <!-- ===================================================
+           BARRA SUPERIOR
+           =================================================== -->
 
       <header class="topbar">
 
@@ -105,6 +111,10 @@
       </header>
 
 
+      <!-- ===================================================
+           CONTENIDO PRINCIPAL
+           =================================================== -->
+
       <main class="container">
 
         <h2>
@@ -117,7 +127,9 @@
         </p>
 
 
-        <!-- MENÚ -->
+        <!-- =================================================
+             MENÚ PRINCIPAL
+             ================================================= -->
 
         <div class="cards">
 
@@ -137,10 +149,13 @@
             </h3>
 
             <p>
+
               <span id="cantidad-socios">
                 Cargando...
               </span>
+
               socios activos
+
             </p>
 
           </button>
@@ -211,7 +226,9 @@
         </div>
 
 
-        <!-- ESTADO DEL SISTEMA -->
+        <!-- =================================================
+             ESTADO DEL SISTEMA
+             ================================================= -->
 
         <section class="panel">
 
@@ -261,17 +278,36 @@
   </div>
 
 
-  <!-- SUPABASE -->
+  <!-- =====================================================
+       SUPABASE
+       ===================================================== -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- CONFIGURACIÓN -->
+
+  <!-- =====================================================
+       LIBRERÍA XLSX / SHEETJS
+
+       Esta librería permite crear archivos Excel reales
+       (.xlsx), no archivos CSV.
+       ===================================================== -->
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+
+  <!-- =====================================================
+       CONFIGURACIÓN SUPABASE
+       ===================================================== -->
 
   <script src="config.js"></script>
 
-  <!-- APLICACIÓN -->
+
+  <!-- =====================================================
+       APLICACIÓN PRINCIPAL
+       ===================================================== -->
 
   <script src="app.js"></script>
+
 
 </body>
 
