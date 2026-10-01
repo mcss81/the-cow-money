@@ -1,6 +1,6 @@
 // ============================================================
 // THE COW MONEY
-// app.js
+// APP PRINCIPAL
 // ============================================================
 
 // ============================================================
@@ -8,8 +8,8 @@
 // ============================================================
 
 const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
+  window.SUPABASE_URL,
+  window.SUPABASE_ANON_KEY
 );
 
 
@@ -39,7 +39,8 @@ const logoutButton = document.getElementById("logout");
 
 const userName = document.getElementById("user-name");
 
-const cantidadSocios = document.getElementById("cantidad-socios");
+const cantidadSocios =
+  document.getElementById("cantidad-socios");
 
 const connectionStatus =
   document.getElementById("connection-status");
@@ -58,26 +59,51 @@ const volverPanel =
 
 
 // ============================================================
-// INICIO
+// INICIAR APLICACIÓN
 // ============================================================
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", async function () {
 
   configurarEventos();
 
-  const {
-    data: {
-      session
+  try {
+
+    const {
+      data,
+      error
+    } = await supabaseClient.auth.getSession();
+
+    if (error) {
+
+      console.error(
+        "Error obteniendo sesión:",
+        error
+      );
+
+      mostrarLogin();
+
+      return;
     }
-  } = await supabaseClient.auth.getSession();
 
-  if (session) {
+    if (data.session) {
 
-    usuarioActual = session.user;
+      usuarioActual =
+        data.session.user;
 
-    await mostrarAplicacion();
+      await mostrarAplicacion();
 
-  } else {
+    } else {
+
+      mostrarLogin();
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Error iniciando aplicación:",
+      error
+    );
 
     mostrarLogin();
 
@@ -87,7 +113,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 // ============================================================
-// EVENTOS
+// CONFIGURAR EVENTOS
 // ============================================================
 
 function configurarEventos() {
@@ -101,6 +127,7 @@ function configurarEventos() {
 
   }
 
+
   if (logoutButton) {
 
     logoutButton.addEventListener(
@@ -110,20 +137,27 @@ function configurarEventos() {
 
   }
 
+
   document
     .querySelectorAll(".menu-card")
-    .forEach((boton) => {
+    .forEach(function (boton) {
 
-      boton.addEventListener("click", () => {
+      boton.addEventListener(
+        "click",
+        function () {
 
-        const modulo =
-          boton.dataset.modulo;
+          const modulo =
+            boton.getAttribute(
+              "data-modulo"
+            );
 
-        abrirModulo(modulo);
+          abrirModulo(modulo);
 
-      });
+        }
+      );
 
     });
+
 
   if (volverPanel) {
 
@@ -148,37 +182,59 @@ async function iniciarSesion(event) {
   loginMessage.textContent =
     "Ingresando...";
 
+
   const email =
     emailInput.value.trim();
 
   const password =
     passwordInput.value;
 
-  const {
-    data,
-    error
-  } = await supabaseClient.auth.signInWithPassword({
 
-    email,
-    password
+  try {
 
-  });
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.signInWithPassword({
 
-  if (error) {
+        email: email,
+
+        password: password
+
+      });
+
+
+    if (error) {
+
+      loginMessage.textContent =
+        "Error: " + error.message;
+
+      return;
+
+    }
+
+
+    usuarioActual =
+      data.user;
+
+    loginMessage.textContent = "";
+
+
+    await mostrarAplicacion();
+
+
+  } catch (error) {
+
+    console.error(
+      "Error en login:",
+      error
+    );
 
     loginMessage.textContent =
-      "Error: " + error.message;
-
-    return;
+      "No se pudo iniciar sesión.";
 
   }
-
-  usuarioActual =
-    data.user;
-
-  loginMessage.textContent = "";
-
-  await mostrarAplicacion();
 
 }
 
@@ -193,12 +249,14 @@ async function mostrarAplicacion() {
 
   mainScreen.classList.remove("hidden");
 
+
   if (usuarioActual) {
 
     userName.textContent =
       usuarioActual.email || "";
 
   }
+
 
   await cargarDatosIniciales();
 
@@ -211,9 +269,13 @@ async function mostrarAplicacion() {
 
 function mostrarLogin() {
 
-  loginScreen.classList.remove("hidden");
+  loginScreen.classList.remove(
+    "hidden"
+  );
 
-  mainScreen.classList.add("hidden");
+  mainScreen.classList.add(
+    "hidden"
+  );
 
 }
 
@@ -224,7 +286,18 @@ function mostrarLogin() {
 
 async function cerrarSesion() {
 
-  await supabaseClient.auth.signOut();
+  try {
+
+    await supabaseClient.auth.signOut();
+
+  } catch (error) {
+
+    console.error(
+      "Error cerrando sesión:",
+      error
+    );
+
+  }
 
   usuarioActual = null;
 
@@ -239,72 +312,127 @@ async function cerrarSesion() {
 
 async function cargarDatosIniciales() {
 
+  connectionStatus.textContent =
+    "Conectando con Supabase...";
+
+
+  // ----------------------------------------------------------
+  // SOCIOS
+  // ----------------------------------------------------------
+
   try {
 
     await cargarSocios();
 
-    await cargarAportes();
+  } catch (error) {
+
+    console.error(
+      "ERROR REAL AL CARGAR SOCIOS:",
+      error
+    );
 
     connectionStatus.textContent =
-      `Conexión correcta. Socios encontrados: ${socios.length}`;
+      "Error al cargar socios: " +
+      (error.message || error);
+
+    return;
+
+  }
+
+
+  // ----------------------------------------------------------
+  // APORTES
+  // ----------------------------------------------------------
+
+  try {
+
+    await cargarAportes();
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "ERROR AL CARGAR APORTES:",
+      error
+    );
 
     connectionStatus.textContent =
-      "Error al conectar con Supabase.";
+      "Socios cargados correctamente. " +
+      "Error al cargar aportes: " +
+      (error.message || error);
+
+    return;
 
   }
+
+
+  // ----------------------------------------------------------
+  // TODO CORRECTO
+  // ----------------------------------------------------------
+
+  connectionStatus.textContent =
+    "Conexión correcta. Socios encontrados: " +
+    socios.length;
 
 }
 
 
 // ============================================================
-// SOCIOS
+// CARGAR SOCIOS
 // ============================================================
 
 async function cargarSocios() {
 
-  const {
-    data,
-    error
-  } = await supabaseClient
-    .from("socios")
-    .select(`
-      id,
-      nombre,
-      email,
-      rol,
-      estado
-    `)
-    .order("nombre", {
-      ascending: true
-    });
+  const resultado =
+    await supabaseClient
+      .from("socios")
+      .select(
+        "id,nombre,email,rol,estado"
+      )
+      .order(
+        "nombre",
+        {
+          ascending: true
+        }
+      );
+
+
+  const data =
+    resultado.data;
+
+  const error =
+    resultado.error;
+
 
   if (error) {
-
-    console.error(
-      "Error cargando socios:",
-      error
-    );
 
     throw error;
 
   }
 
-  socios = data || [];
+
+  socios =
+    data || [];
+
 
   const activos =
-    socios.filter(
-      socio =>
-        socio.estado === "ACTIVO"
-    );
+    socios.filter(function (socio) {
 
-  cantidadSocios.textContent =
-    activos.length;
+      return socio.estado === "ACTIVO";
 
-  mostrarSociosInicio(activos);
+    });
+
+
+  if (cantidadSocios) {
+
+    cantidadSocios.textContent =
+      activos.length;
+
+  }
+
+
+  mostrarSociosInicio(
+    activos
+  );
 
 }
 
@@ -316,8 +444,11 @@ async function cargarSocios() {
 function mostrarSociosInicio(lista) {
 
   if (!sociosLista) {
+
     return;
+
   }
+
 
   if (!lista.length) {
 
@@ -328,9 +459,9 @@ function mostrarSociosInicio(lista) {
 
   }
 
-  let html = "";
 
-  html += `
+  let html = `
+
     <div class="tabla-contenedor">
 
       <table>
@@ -338,98 +469,129 @@ function mostrarSociosInicio(lista) {
         <thead>
 
           <tr>
+
             <th>Nombre</th>
+
             <th>Correo</th>
+
             <th>Rol</th>
+
             <th>Estado</th>
+
           </tr>
 
         </thead>
 
         <tbody>
+
   `;
 
-  lista.forEach((socio) => {
+
+  lista.forEach(function (socio) {
 
     html += `
+
       <tr>
 
         <td>
-          ${escapeHtml(socio.nombre)}
+          ${escapeHtml(
+            socio.nombre ||
+            "Sin nombre"
+          )}
         </td>
 
         <td>
           ${
             socio.email
-              ? escapeHtml(socio.email)
+              ? escapeHtml(
+                  socio.email
+                )
               : "Sin correo"
           }
         </td>
 
         <td>
-          ${escapeHtml(socio.rol || "SOCIO")}
+          ${escapeHtml(
+            socio.rol ||
+            "SOCIO"
+          )}
         </td>
 
         <td>
-          ${escapeHtml(socio.estado || "")}
+          ${escapeHtml(
+            socio.estado ||
+            ""
+          )}
         </td>
 
       </tr>
+
     `;
 
   });
 
+
   html += `
+
         </tbody>
 
       </table>
 
     </div>
+
   `;
 
-  sociosLista.innerHTML = html;
+
+  sociosLista.innerHTML =
+    html;
 
 }
 
 
 // ============================================================
-// APORTES
+// CARGAR APORTES
 // ============================================================
 
 async function cargarAportes() {
 
-  const {
-    data,
-    error
-  } = await supabaseClient
-    .from("aportes")
-    .select(`
-      id,
-      socio_id,
-      fecha_vencimiento,
-      valor_aporte,
-      fecha_pago,
-      estado,
-      multa,
-      total_pagado,
-      observacion
-    `)
-    .order("fecha_vencimiento", {
-      ascending: false
-    });
+  const resultado =
+    await supabaseClient
+      .from("aportes")
+      .select(`
+        id,
+        socio_id,
+        fecha_vencimiento,
+        valor_aporte,
+        fecha_pago,
+        estado,
+        multa,
+        total_pagado,
+        observacion
+      `)
+      .order(
+        "fecha_vencimiento",
+        {
+          ascending: false
+        }
+      );
+
+
+  const data =
+    resultado.data;
+
+  const error =
+    resultado.error;
+
 
   if (error) {
-
-    console.error(
-      "Error cargando aportes:",
-      error
-    );
 
     throw error;
 
   }
 
-  aportes = data || [];
+
+  aportes =
+    data || [];
 
 }
 
@@ -440,42 +602,102 @@ async function cargarAportes() {
 
 async function abrirModulo(modulo) {
 
-  moduloScreen.classList.remove("hidden");
+  moduloScreen.classList.remove(
+    "hidden"
+  );
+
 
   moduloContenido.innerHTML =
     "<p>Cargando...</p>";
 
-  if (modulo === "socios") {
 
-    mostrarModuloSocios();
+  try {
 
-    return;
+    // --------------------------------------------------------
+    // SOCIOS
+    // --------------------------------------------------------
 
-  }
+    if (modulo === "socios") {
 
-  if (modulo === "aportes") {
+      if (!socios.length) {
 
-    await cargarAportes();
+        await cargarSocios();
 
-    mostrarModuloAportes();
+      }
 
-    return;
+      mostrarModuloSocios();
 
-  }
+      return;
 
-  if (modulo === "prestamos") {
+    }
 
-    mostrarModuloPrestamos();
 
-    return;
+    // --------------------------------------------------------
+    // APORTES
+    // --------------------------------------------------------
 
-  }
+    if (modulo === "aportes") {
 
-  if (modulo === "caja") {
+      await cargarAportes();
 
-    mostrarModuloCaja();
+      mostrarModuloAportes();
 
-    return;
+      return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // PRÉSTAMOS
+    // --------------------------------------------------------
+
+    if (modulo === "prestamos") {
+
+      mostrarModuloPrestamos();
+
+      return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // CAJA
+    // --------------------------------------------------------
+
+    if (modulo === "caja") {
+
+      mostrarModuloCaja();
+
+      return;
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Error abriendo módulo:",
+      error
+    );
+
+
+    moduloContenido.innerHTML = `
+
+      <div class="panel">
+
+        <h3>
+          ⚠️ Error
+        </h3>
+
+        <p>
+          ${escapeHtml(
+            error.message ||
+            "Error desconocido"
+          )}
+        </p>
+
+      </div>
+
+    `;
 
   }
 
@@ -488,9 +710,12 @@ async function abrirModulo(modulo) {
 
 function volverAlPanel() {
 
-  moduloScreen.classList.add("hidden");
+  moduloScreen.classList.add(
+    "hidden"
+  );
 
-  moduloContenido.innerHTML = "";
+  moduloContenido.innerHTML =
+    "";
 
 }
 
@@ -502,22 +727,28 @@ function volverAlPanel() {
 function mostrarModuloSocios() {
 
   const activos =
-    socios.filter(
-      socio =>
-        socio.estado === "ACTIVO"
-    );
+    socios.filter(function (socio) {
+
+      return socio.estado === "ACTIVO";
+
+    });
+
 
   let html = `
 
     <div class="modulo-header">
 
-      <h2>👥 Socios</h2>
+      <h2>
+        👥 Socios
+      </h2>
 
       <p>
-        Administración de los socios de The Cow Money.
+        Administración de los socios
+        de The Cow Money.
       </p>
 
     </div>
+
 
     <div class="panel">
 
@@ -526,11 +757,15 @@ function mostrarModuloSocios() {
       </h3>
 
       <p>
+
         <strong>
           ${activos.length}
         </strong>
-        socios registrados
+
+        socios activos
+
       </p>
+
 
       <div class="tabla-contenedor">
 
@@ -540,42 +775,66 @@ function mostrarModuloSocios() {
 
             <tr>
 
-              <th>Nombre</th>
-              <th>Correo</th>
-              <th>Rol</th>
-              <th>Estado</th>
+              <th>
+                Nombre
+              </th>
+
+              <th>
+                Correo
+              </th>
+
+              <th>
+                Rol
+              </th>
+
+              <th>
+                Estado
+              </th>
 
             </tr>
 
           </thead>
 
           <tbody>
+
   `;
 
-  activos.forEach((socio) => {
+
+  activos.forEach(function (socio) {
 
     html += `
 
       <tr>
 
         <td>
-          ${escapeHtml(socio.nombre)}
+          ${escapeHtml(
+            socio.nombre ||
+            "Sin nombre"
+          )}
         </td>
 
         <td>
           ${
             socio.email
-              ? escapeHtml(socio.email)
+              ? escapeHtml(
+                  socio.email
+                )
               : "Sin correo"
           }
         </td>
 
         <td>
-          ${escapeHtml(socio.rol || "SOCIO")}
+          ${escapeHtml(
+            socio.rol ||
+            "SOCIO"
+          )}
         </td>
 
         <td>
-          ${escapeHtml(socio.estado || "")}
+          ${escapeHtml(
+            socio.estado ||
+            ""
+          )}
         </td>
 
       </tr>
@@ -583,6 +842,7 @@ function mostrarModuloSocios() {
     `;
 
   });
+
 
   html += `
 
@@ -596,7 +856,9 @@ function mostrarModuloSocios() {
 
   `;
 
-  moduloContenido.innerHTML = html;
+
+  moduloContenido.innerHTML =
+    html;
 
 }
 
@@ -610,11 +872,14 @@ function mostrarModuloAportes() {
   const resumen =
     calcularResumenAportes();
 
+
   const html = `
 
     <div class="modulo-header">
 
-      <h2>💵 Aportes</h2>
+      <h2>
+        💵 Aportes
+      </h2>
 
       <p>
         Control de aportes mensuales y multas.
@@ -623,9 +888,8 @@ function mostrarModuloAportes() {
     </div>
 
 
-    <!-- RESUMEN -->
-
     <div class="resumen-aportes">
+
 
       <div class="resumen-card">
 
@@ -704,10 +968,9 @@ function mostrarModuloAportes() {
 
       </div>
 
+
     </div>
 
-
-    <!-- REGISTRAR PAGO -->
 
     <div class="panel">
 
@@ -716,16 +979,18 @@ function mostrarModuloAportes() {
       </h3>
 
       <p>
-        Selecciona el socio y el aporte que deseas registrar.
-        La multa se calculará automáticamente según la fecha de pago.
+        Selecciona el socio, el aporte
+        y la fecha real en que realizó
+        el pago.
       </p>
 
 
       <div class="form-grid">
 
+
         <div>
 
-          <label for="pago-socio">
+          <label>
             Socio
           </label>
 
@@ -736,15 +1001,35 @@ function mostrarModuloAportes() {
             </option>
 
             ${socios
-              .filter(s => s.estado === "ACTIVO")
-              .sort((a, b) =>
-                a.nombre.localeCompare(b.nombre)
+              .filter(
+                function (s) {
+                  return s.estado === "ACTIVO";
+                }
               )
-              .map(s => `
-                <option value="${s.id}">
-                  ${escapeHtml(s.nombre)}
-                </option>
-              `)
+              .sort(
+                function (a, b) {
+                  return a.nombre.localeCompare(
+                    b.nombre
+                  );
+                }
+              )
+              .map(
+                function (s) {
+
+                  return `
+
+                    <option
+                      value="${s.id}"
+                    >
+                      ${escapeHtml(
+                        s.nombre
+                      )}
+                    </option>
+
+                  `;
+
+                }
+              )
               .join("")}
 
           </select>
@@ -754,7 +1039,7 @@ function mostrarModuloAportes() {
 
         <div>
 
-          <label for="pago-aporte">
+          <label>
             Aporte
           </label>
 
@@ -771,7 +1056,7 @@ function mostrarModuloAportes() {
 
         <div>
 
-          <label for="pago-fecha">
+          <label>
             Fecha de pago
           </label>
 
@@ -783,6 +1068,7 @@ function mostrarModuloAportes() {
 
         </div>
 
+
       </div>
 
 
@@ -790,7 +1076,10 @@ function mostrarModuloAportes() {
         id="calculo-pago"
         class="calculo-pago"
       >
-        Selecciona un aporte para calcular el pago.
+
+        Selecciona un aporte
+        para calcular el pago.
+
       </div>
 
 
@@ -799,7 +1088,9 @@ function mostrarModuloAportes() {
         class="primary"
         type="button"
       >
+
         Registrar pago
+
       </button>
 
 
@@ -808,16 +1099,16 @@ function mostrarModuloAportes() {
         class="message"
       ></p>
 
+
     </div>
 
-
-    <!-- REGISTRO -->
 
     <div class="panel">
 
       <h3>
         Registro de aportes
       </h3>
+
 
       <div class="tabla-contenedor">
 
@@ -827,13 +1118,33 @@ function mostrarModuloAportes() {
 
             <tr>
 
-              <th>Socio</th>
-              <th>Vencimiento</th>
-              <th>Aporte</th>
-              <th>Multa</th>
-              <th>Total pagado</th>
-              <th>Fecha pago</th>
-              <th>Estado</th>
+              <th>
+                Socio
+              </th>
+
+              <th>
+                Vencimiento
+              </th>
+
+              <th>
+                Aporte
+              </th>
+
+              <th>
+                Multa
+              </th>
+
+              <th>
+                Total pagado
+              </th>
+
+              <th>
+                Fecha pago
+              </th>
+
+              <th>
+                Estado
+              </th>
 
             </tr>
 
@@ -853,7 +1164,10 @@ function mostrarModuloAportes() {
 
   `;
 
-  moduloContenido.innerHTML = html;
+
+  moduloContenido.innerHTML =
+    html;
+
 
   configurarFormularioPago();
 
@@ -867,54 +1181,81 @@ function mostrarModuloAportes() {
 function calcularResumenAportes() {
 
   let pagados = 0;
+
   let pendientes = 0;
+
   let atrasados = 0;
 
   let multas = 0;
+
   let pendiente = 0;
 
-  aportes.forEach((aporte) => {
+
+  aportes.forEach(function (aporte) {
+
+    const valor =
+      Number(
+        aporte.valor_aporte || 0
+      );
+
+    const multa =
+      Number(
+        aporte.multa || 0
+      );
+
 
     if (aporte.estado === "PAGADO") {
 
       pagados++;
 
-    } else if (aporte.estado === "ATRASADO") {
+    }
+
+    else if (
+      aporte.estado === "ATRASADO"
+    ) {
 
       atrasados++;
 
       pendiente +=
-        Number(aporte.valor_aporte || 0) +
-        Number(aporte.multa || 0);
+        valor + multa;
 
-    } else {
+    }
+
+    else {
 
       pendientes++;
 
       pendiente +=
-        Number(aporte.valor_aporte || 0) +
-        Number(aporte.multa || 0);
+        valor + multa;
 
     }
 
+
     multas +=
-      Number(aporte.multa || 0);
+      multa;
 
   });
 
+
   return {
 
-    total: aportes.length,
+    total:
+      aportes.length,
 
-    pagados,
+    pagados:
+      pagados,
 
-    pendientes,
+    pendientes:
+      pendientes,
 
-    atrasados,
+    atrasados:
+      atrasados,
 
-    multas,
+    multas:
+      multas,
 
-    pendiente
+    pendiente:
+      pendiente
 
   };
 
@@ -922,7 +1263,7 @@ function calcularResumenAportes() {
 
 
 // ============================================================
-// FILAS APORTES
+// GENERAR FILAS APORTES
 // ============================================================
 
 function generarFilasAportes() {
@@ -934,7 +1275,9 @@ function generarFilasAportes() {
       <tr>
 
         <td colspan="7">
+
           No hay aportes registrados.
+
         </td>
 
       </tr>
@@ -943,18 +1286,23 @@ function generarFilasAportes() {
 
   }
 
+
   return aportes
-    .map((aporte) => {
+    .map(function (aporte) {
 
       const socio =
         socios.find(
-          s => s.id === aporte.socio_id
+          function (s) {
+            return s.id === aporte.socio_id;
+          }
         );
+
 
       const nombre =
         socio
           ? socio.nombre
           : "Socio desconocido";
+
 
       return `
 
@@ -965,31 +1313,43 @@ function generarFilasAportes() {
           </td>
 
           <td>
-            ${formatearFecha(aporte.fecha_vencimiento)}
+            ${formatearFecha(
+              aporte.fecha_vencimiento
+            )}
           </td>
 
           <td>
-            $ ${Number(aporte.valor_aporte || 0).toFixed(2)}
+            $ ${Number(
+              aporte.valor_aporte || 0
+            ).toFixed(2)}
           </td>
 
           <td>
-            $ ${Number(aporte.multa || 0).toFixed(2)}
+            $ ${Number(
+              aporte.multa || 0
+            ).toFixed(2)}
           </td>
 
           <td>
-            $ ${Number(aporte.total_pagado || 0).toFixed(2)}
+            $ ${Number(
+              aporte.total_pagado || 0
+            ).toFixed(2)}
           </td>
 
           <td>
             ${
               aporte.fecha_pago
-                ? formatearFecha(aporte.fecha_pago)
+                ? formatearFecha(
+                    aporte.fecha_pago
+                  )
                 : "-"
             }
           </td>
 
           <td>
-            ${escapeHtml(aporte.estado || "")}
+            ${escapeHtml(
+              aporte.estado || ""
+            )}
           </td>
 
         </tr>
@@ -1009,32 +1369,57 @@ function generarFilasAportes() {
 function configurarFormularioPago() {
 
   const socioSelect =
-    document.getElementById("pago-socio");
+    document.getElementById(
+      "pago-socio"
+    );
 
   const aporteSelect =
-    document.getElementById("pago-aporte");
+    document.getElementById(
+      "pago-aporte"
+    );
 
   const fechaInput =
-    document.getElementById("pago-fecha");
+    document.getElementById(
+      "pago-fecha"
+    );
 
   const calcularDiv =
-    document.getElementById("calculo-pago");
+    document.getElementById(
+      "calculo-pago"
+    );
 
   const boton =
-    document.getElementById("btn-registrar-pago");
+    document.getElementById(
+      "btn-registrar-pago"
+    );
 
   const mensaje =
-    document.getElementById("mensaje-pago");
+    document.getElementById(
+      "mensaje-pago"
+    );
+
+
+  if (
+    !socioSelect ||
+    !aporteSelect ||
+    !fechaInput ||
+    !boton
+  ) {
+
+    return;
+
+  }
 
 
   socioSelect.addEventListener(
     "change",
-    () => {
+    function () {
 
       cargarAportesSocio(
         socioSelect.value,
         aporteSelect
       );
+
 
       calcularDiv.innerHTML =
         "Selecciona un aporte.";
@@ -1051,7 +1436,11 @@ function configurarFormularioPago() {
     const fechaPago =
       fechaInput.value;
 
-    if (!aporteId || !fechaPago) {
+
+    if (
+      !aporteId ||
+      !fechaPago
+    ) {
 
       calcularDiv.innerHTML =
         "Selecciona un aporte y una fecha de pago.";
@@ -1060,20 +1449,28 @@ function configurarFormularioPago() {
 
     }
 
+
     const aporte =
       aportes.find(
-        a => a.id === aporteId
+        function (a) {
+          return a.id === aporteId;
+        }
       );
 
+
     if (!aporte) {
+
       return;
+
     }
+
 
     const calculo =
       calcularMulta(
         aporte.fecha_vencimiento,
         fechaPago
       );
+
 
     calcularDiv.innerHTML = `
 
@@ -1085,14 +1482,18 @@ function configurarFormularioPago() {
 
       Vencimiento:
       <strong>
-        ${formatearFecha(aporte.fecha_vencimiento)}
+        ${formatearFecha(
+          aporte.fecha_vencimiento
+        )}
       </strong>
 
       <br>
 
       Fecha de pago:
       <strong>
-        ${formatearFecha(fechaPago)}
+        ${formatearFecha(
+          fechaPago
+        )}
       </strong>
 
       <br>
@@ -1113,12 +1514,12 @@ function configurarFormularioPago() {
 
       Total:
       <strong>
-        $ ${
-          (
-            Number(aporte.valor_aporte || 0) +
-            calculo.multa
-          ).toFixed(2)
-        }
+        $ ${(
+          Number(
+            aporte.valor_aporte || 0
+          ) +
+          calculo.multa
+        ).toFixed(2)}
       </strong>
 
     `;
@@ -1140,10 +1541,11 @@ function configurarFormularioPago() {
 
   boton.addEventListener(
     "click",
-    async () => {
+    async function () {
 
       mensaje.textContent =
         "";
+
 
       const socioId =
         socioSelect.value;
@@ -1154,6 +1556,7 @@ function configurarFormularioPago() {
       const fechaPago =
         fechaInput.value;
 
+
       if (!socioId) {
 
         mensaje.textContent =
@@ -1163,6 +1566,7 @@ function configurarFormularioPago() {
 
       }
 
+
       if (!aporteId) {
 
         mensaje.textContent =
@@ -1171,6 +1575,7 @@ function configurarFormularioPago() {
         return;
 
       }
+
 
       if (!fechaPago) {
 
@@ -1184,8 +1589,11 @@ function configurarFormularioPago() {
 
       const aporte =
         aportes.find(
-          a => a.id === aporteId
+          function (a) {
+            return a.id === aporteId;
+          }
         );
+
 
       if (!aporte) {
 
@@ -1205,64 +1613,83 @@ function configurarFormularioPago() {
 
 
       const total =
-        Number(aporte.valor_aporte || 0) +
+        Number(
+          aporte.valor_aporte || 0
+        ) +
         calculo.multa;
 
 
-      boton.disabled = true;
+      boton.disabled =
+        true;
 
       boton.textContent =
         "Registrando...";
 
 
-      const {
-        error
-      } = await supabaseClient
-        .from("aportes")
-        .update({
+      try {
 
-          fecha_pago:
-            fechaPago,
+        const {
+          error
+        } =
+          await supabaseClient
+            .from("aportes")
+            .update({
 
-          estado:
-            "PAGADO",
+              fecha_pago:
+                fechaPago,
 
-          multa:
-            calculo.multa,
+              estado:
+                "PAGADO",
 
-          total_pagado:
-            total
+              multa:
+                calculo.multa,
 
-        })
-        .eq("id", aporteId);
+              total_pagado:
+                total
+
+            })
+            .eq(
+              "id",
+              aporteId
+            );
 
 
-      boton.disabled = false;
+        if (error) {
 
-      boton.textContent =
-        "Registrar pago";
+          throw error;
+
+        }
 
 
-      if (error) {
+        mensaje.textContent =
+          "Pago registrado correctamente.";
 
-        console.error(error);
+
+        await cargarAportes();
+
+        mostrarModuloAportes();
+
+
+      } catch (error) {
+
+        console.error(
+          "Error registrando pago:",
+          error
+        );
+
 
         mensaje.textContent =
           "Error al registrar el pago: " +
           error.message;
 
-        return;
-
       }
 
 
-      mensaje.textContent =
-        "Pago registrado correctamente.";
+      boton.disabled =
+        false;
 
-
-      await cargarAportes();
-
-      mostrarModuloAportes();
+      boton.textContent =
+        "Registrar pago";
 
     }
   );
@@ -1296,9 +1723,14 @@ function cargarAportesSocio(
 
   const disponibles =
     aportes.filter(
-      aporte =>
-        aporte.socio_id === socioId &&
-        aporte.estado !== "PAGADO"
+      function (aporte) {
+
+        return (
+          aporte.socio_id === socioId &&
+          aporte.estado !== "PAGADO"
+        );
+
+      }
     );
 
 
@@ -1325,17 +1757,30 @@ function cargarAportesSocio(
 
     ${
       disponibles
-        .map(aporte => `
+        .map(function (aporte) {
 
-          <option value="${aporte.id}">
+          return `
 
-            ${formatearFecha(aporte.fecha_vencimiento)}
-            -
-            $ ${Number(aporte.valor_aporte || 0).toFixed(2)}
+            <option
+              value="${aporte.id}"
+            >
 
-          </option>
+              ${formatearFecha(
+                aporte.fecha_vencimiento
+              )}
 
-        `)
+              -
+              $
+
+              ${Number(
+                aporte.valor_aporte || 0
+              ).toFixed(2)}
+
+            </option>
+
+          `;
+
+        })
         .join("")
     }
 
@@ -1348,16 +1793,13 @@ function cargarAportesSocio(
 // CALCULAR MULTA
 // ============================================================
 //
-// REGLAS:
+// 0 días       = $0
+// 1 a 7        = $4
+// 8 a 14       = $5
+// 15 a 21      = $6
+// 22 o más     = $7
 //
-// 0 días de atraso       = $0
-// 1 a 7 días             = $4
-// 8 a 14 días            = $5
-// 15 a 21 días           = $6
-// 22 a 28 días           = $7
-//
-// Después de 28 días se mantiene en $7
-// según la regla actual definida.
+// La fecha de pago la introduce el administrador.
 // ============================================================
 
 function calcularMulta(
@@ -1369,6 +1811,7 @@ function calcularMulta(
     convertirFechaUTC(
       fechaVencimiento
     );
+
 
   const pago =
     convertirFechaUTC(
@@ -1386,7 +1829,12 @@ function calcularMulta(
       0,
       Math.floor(
         diferencia /
-        (1000 * 60 * 60 * 24)
+        (
+          1000 *
+          60 *
+          60 *
+          24
+        )
       )
     );
 
@@ -1398,19 +1846,27 @@ function calcularMulta(
 
     multa = 0;
 
-  } else if (diasAtraso <= 7) {
+  }
+
+  else if (diasAtraso <= 7) {
 
     multa = 4;
 
-  } else if (diasAtraso <= 14) {
+  }
+
+  else if (diasAtraso <= 14) {
 
     multa = 5;
 
-  } else if (diasAtraso <= 21) {
+  }
+
+  else if (diasAtraso <= 21) {
 
     multa = 6;
 
-  } else {
+  }
+
+  else {
 
     multa = 7;
 
@@ -1419,9 +1875,11 @@ function calcularMulta(
 
   return {
 
-    diasAtraso,
+    diasAtraso:
+      diasAtraso,
 
-    multa
+    multa:
+      multa
 
   };
 
@@ -1429,7 +1887,7 @@ function calcularMulta(
 
 
 // ============================================================
-// PRESTAMOS
+// PRÉSTAMOS
 // ============================================================
 
 function mostrarModuloPrestamos() {
@@ -1438,13 +1896,16 @@ function mostrarModuloPrestamos() {
 
     <div class="modulo-header">
 
-      <h2>🏦 Préstamos</h2>
+      <h2>
+        🏦 Préstamos
+      </h2>
 
       <p>
         Solicitudes, cuotas y renovaciones.
       </p>
 
     </div>
+
 
     <div class="panel">
 
@@ -1453,8 +1914,8 @@ function mostrarModuloPrestamos() {
       </h3>
 
       <p>
-        Aquí construiremos el control de préstamos,
-        intereses, pagos y vencimientos.
+        Aquí construiremos el control de
+        préstamos, intereses, pagos y vencimientos.
       </p>
 
     </div>
@@ -1474,13 +1935,16 @@ function mostrarModuloCaja() {
 
     <div class="modulo-header">
 
-      <h2>📒 Caja</h2>
+      <h2>
+        📒 Caja
+      </h2>
 
       <p>
         Ingresos y movimientos.
       </p>
 
     </div>
+
 
     <div class="panel">
 
@@ -1489,8 +1953,8 @@ function mostrarModuloCaja() {
       </h3>
 
       <p>
-        Aquí construiremos el control de ingresos,
-        egresos y saldo disponible.
+        Aquí construiremos el control de
+        ingresos, egresos y saldo disponible.
       </p>
 
     </div>
@@ -1509,20 +1973,36 @@ function obtenerFechaLocal() {
   const ahora =
     new Date();
 
+
   const year =
     ahora.getFullYear();
+
 
   const month =
     String(
       ahora.getMonth() + 1
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
+
 
   const day =
     String(
       ahora.getDate()
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
-  return `${year}-${month}-${day}`;
+
+  return (
+    year +
+    "-" +
+    month +
+    "-" +
+    day
+  );
 
 }
 
@@ -1538,11 +2018,16 @@ function convertirFechaUTC(
   const partes =
     fecha.split("-");
 
+
   return new Date(
     Date.UTC(
+
       Number(partes[0]),
+
       Number(partes[1]) - 1,
+
       Number(partes[2])
+
     )
   );
 
@@ -1558,17 +2043,32 @@ function formatearFecha(
 ) {
 
   if (!fecha) {
+
     return "-";
+
   }
+
 
   const partes =
     fecha.split("-");
 
-  if (partes.length !== 3) {
+
+  if (
+    partes.length !== 3
+  ) {
+
     return fecha;
+
   }
 
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+  return (
+    partes[2] +
+    "/" +
+    partes[1] +
+    "/" +
+    partes[0]
+  );
 
 }
 
@@ -1581,18 +2081,41 @@ function escapeHtml(
   texto
 ) {
 
-  if (texto === null ||
-      texto === undefined) {
+  if (
+    texto === null ||
+    texto === undefined
+  ) {
 
     return "";
 
   }
 
+
   return String(texto)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
 
 }
